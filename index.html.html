@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supply Chain Digital Maturity Assessment</title>
+<link rel="icon" type="image/x-icon" href="https://images.icon-icons.com/1369/PNG/512/-assessment_90481.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';document.head.appendChild(s);})()"></script>
+<style>
+/* ============ TOKENS — flat monotone editorial ============ */
+:root{
+  --bg-0: rgba(249, 248, 246,0.6);
+  --bg-05: rgba(249, 248, 246,0.7);
+  --bg-1:#FFFFFF;
+  --bg-2:rgba(220, 139, 59, 0.4);
+  --bg-3:rgba(227, 177, 136, 0.2);
+  --ink-0:#171512;
+  --ink-1:#4A443C;
+  --ink-2:#8C8275;
+  --line:rgba(23,21,18,0.16);
+  --line-strong:rgba(23,21,18,0.55);
+  --accent:#171512;
+  --accent-2:#C9B59C;
+  --accent-3:#8C8275;
+  --ok:#4A6B4A;
+  --warn:#8C5A2B;
+  --panel-bg: rgba(255, 255, 255, 0.2);
+  --panel-brd:rgba(23,21,18,0.14);
+  --panel-shadow:0 1px 0 rgba(23,21,18,.05);
+  --btn-bg:rgba(23, 21, 18, 0.9);
+  --btn-ink:#F9F8F6;
+  --glass-bg:var(--panel-bg);
+  --glass-brd:var(--panel-brd);
+  --glass-shadow:var(--panel-shadow);
+  --grad-btn:var(--btn-bg);
+  --grad-a:var(--ink-0);
+  --grad-b:var(--ink-1);
+  --grad-c:var(--ink-2);
+}
+html[data-theme="dark"]{
+  --bg-0:rgba(10, 10, 10, 0.95);
+  --bg-05:rgba(10, 10, 10, 0.7);
+  --bg-1:#141414;
+  --bg-2:rgba(187, 141, 101, 0.3);
+  --bg-3:rgba(136, 74, 23, 0.2);
+  --ink-0:#F5F3EF;
+  --ink-1:#B8B2A8;
+  --ink-2:#7A756C;
+  --line:rgba(245,243,239,0.14);
+  --line-strong:rgba(245,243,239,0.5);
+  --accent:#F5F3EF;
+  --accent-2:#8C8275;
+  --accent-3:#B8B2A8;
+  --ok:#8FBF8F;
+  --warn:#D9A96C;
+  --panel-bg:rgba(47, 47, 47, 0.001);
+  --panel-brd:rgba(245,243,239,0.14);
+  --panel-shadow:0 1px 0 rgba(0,0,0,.4);
+  --btn-bg:#F5F3EF;
+  --btn-ink:#0A0A0A;
+  --glass-bg:var(--panel-bg);
+  --glass-brd:var(--panel-brd);
+  --glass-shadow:var(--panel-shadow);
+  --grad-btn:var(--btn-bg);
+  --grad-a:var(--ink-0);
+  --grad-b:var(--ink-1);
+  --grad-c:var(--ink-2);
+}
+:root{
+  --font-display:'Archivo Black','Arial Black',sans-serif;
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --top:64px;                       /* room kept clear for the fixed top bar */
+  --bottom:88px;                    /* room kept clear for the fixed bottom buttons */
+  --pad-x:clamp(16px,4.4vw,64px);   /* side padding that shrinks with the screen */
+}
+*{box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  background:var(--bg-0);
+  color:var(--ink-0);
+  overflow:hidden;
+  transition:background .4s ease,color .4s ease;
+}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;margin:0;text-transform:uppercase;letter-spacing:.005em;}
+p{font-family:var(--font-sans);}
+.sans{font-family:var(--font-sans);}
+button{font-family:inherit;cursor:pointer;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+/* faint fixed grid texture instead of colored blobs — flat, minimal */
+.bg-blobs{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:64px 64px;
+  opacity:.35;
+}
+.bg-blobs span{display:none;}
+
+/* ============ PANEL (flat bordered surface, replaces glass) ============ */
+.glass{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-brd);
+  box-shadow:var(--panel-shadow);
+  border-radius:2px;
+  position:relative;
+}
+.glass::before{content:none;}
+
+
+/* ============ APP SHELL ============ */
+.app{position:relative;width:100vw;height:100vh;height:100dvh;z-index:1;overflow:hidden;}
+.stage{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease;
+}
+.stage.active{opacity:1;pointer-events:auto;}
+
+/* top bar */
+.topbar{
+  position:fixed;top:clamp(12px,2.4vh,22px);right:clamp(14px,2vw,26px);z-index:60;
+  display:flex;gap:10px;align-items:center;
+}
+.eyebrow-tag{
+  position:fixed;top:clamp(16px,3vh,28px);left:clamp(14px,2.2vw,32px);z-index:60;
+  font-size:11px;letter-spacing:.14em;color:var(--ink-2);
+  text-transform:uppercase;font-family:var(--font-sans);font-weight:500;
+}
+.theme-toggle{
+  width:52px;height:30px;border-radius:20px;border:1px solid var(--glass-brd);
+  background:var(--glass-bg);backdrop-filter:blur(14px);
+  display:flex;align-items:center;padding:3px;position:relative;
+}
+.theme-toggle .knob{
+  width:22px;height:22px;border-radius:50%;background:var(--grad-btn);
+  transition:transform .35s ease;box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+html[data-theme="dark"] .theme-toggle .knob{transform:translateX(22px);}
+
+/* bottom-right nav pill (Team / All Dimensions) — replaces the old three-part command bar */
+.cmd-bar{
+  position:fixed;right:clamp(14px,2.2vw,32px);bottom:calc(clamp(14px,3vh,26px) + env(safe-area-inset-bottom,0px));z-index:56;
+  pointer-events:none;
+}
+.cmd-bar.hide{display:none;}
+.cmd-right{
+  display:flex;align-items:center;gap:10px;pointer-events:auto;cursor:pointer;
+  font-family:var(--font-sans);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-1);transition:color .2s ease;
+  padding:12px 20px;border-radius:30px;
+  background:var(--glass-bg);border:1px solid var(--glass-brd);backdrop-filter:blur(14px);
+  box-shadow:var(--glass-shadow);
+}
+.cmd-right:hover{color:var(--accent);}
+.cmd-menu-icon{font-size:13px;}
+
+/* ---- bottom docks: pills that expand on hover / click ----
+   results page:   left = Restart, right = "Go back" (expands left: Team / All Dimensions)
+   dimensions page: left = "Examples" (expands right: Revlon / L'Oréal) */
+.dock{position:fixed;bottom:calc(clamp(14px,3vh,26px) + env(safe-area-inset-bottom,0px));z-index:56;display:none;}
+.dock-left{left:clamp(14px,2.2vw,32px);}
+.dock-right{right:clamp(14px,2.2vw,32px);}
+body[data-stage="results"] .results-only{display:flex;}
+body[data-stage="carousel"] .carousel-only{display:flex;}
+.dock-pill{
+  display:flex;align-items:stretch;height:40px;border-radius:30px;overflow:hidden;
+  background:var(--glass-bg);border:1px solid var(--glass-brd);backdrop-filter:blur(14px);
+  box-shadow:var(--glass-shadow);
+  font-family:var(--font-sans);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-1);
+}
+.dock-pill button{
+  display:flex;align-items:center;gap:10px;white-space:nowrap;
+  padding:12px 20px;background:none;border:none;color:inherit;
+  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;
+  transition:background .2s ease,color .2s ease;
+}
+.dock-pill button:hover{color:var(--accent);}
+.dock-opts{
+  display:flex;max-width:0;opacity:0;overflow:hidden;
+  transition:max-width .45s cubic-bezier(.2,.7,.3,1),opacity .3s ease;
+}
+.dock-opts .dock-opt{border-left:1px solid var(--line);}
+.dock-opts .dock-opt:hover{background:var(--btn-bg);color:var(--btn-ink);}
+.dock-right .dock-opts .dock-opt{border-left:none;border-right:1px solid var(--line);}
+.dock-pill.expandable:hover .dock-opts,
+.dock-pill.expandable.open .dock-opts{max-width:460px;opacity:1;}
+.dock-pill.expandable.hold-closed .dock-opts{max-width:0;opacity:0;}
+.dock-chevron{display:inline-block;font-size:14px;line-height:1;transition:transform .3s ease;}
+.dock-pill.expandable:hover .dock-chevron,
+.dock-pill.expandable.open .dock-chevron{transform:rotate(180deg);}
+.dock-pill svg{width:13px;height:13px;flex-shrink:0;}
+
+/* decorative cursor ring, like the drag affordance in the reference */
+.cursor-ring{
+  position:fixed;top:0;left:0;width:46px;height:46px;border-radius:50%;
+  border:1px solid var(--ink-2);pointer-events:none;z-index:45;
+  transform:translate(-50%,-50%) scale(0);opacity:0;
+  transition:transform .25s ease, opacity .25s ease;
+  mix-blend-mode:difference;
+}
+.cursor-ring.show{transform:translate(-50%,-50%) scale(1);opacity:.5;}
+
+/* ============ STAGE 1: MEMBERS — editorial grid, left-aligned ============ */
+.members-wrap{
+  position:relative;width:100%;height:100%;
+  display:grid;grid-template-columns:1fr 1px 1fr;
+  align-items:stretch;padding:0;
+}
+.members-col{
+  display:flex;flex-direction:column;justify-content:center;min-height:0;
+  padding:clamp(64px,11vh,100px) var(--pad-x);
+}
+.members-col.right{justify-content:space-between;gap:16px;}
+.members-divider{background:var(--line);width:1px;}
+.mt-eyebrow{
+  flex:0 0 auto;font-size:clamp(30px,4.2vw,50px);font-weight:bolder;letter-spacing:.10em;line-height:1.05;
+  text-transform:uppercase;color:var(--ink-0);font-family:var(--font-sans);margin-bottom:18px;
+}
+.members-title h1{font-size:clamp(15px,1.4vw,18px);font-family:var(--font-sans);font-weight:500;text-transform:none;letter-spacing:.01em;color:var(--ink-1);}
+.members-title .mt-group{
+  display:flex;align-items:flex-end;height:clamp(46px,6vw,84px);white-space:nowrap;
+  font-family:var(--font-display);font-size:clamp(40px,6vw,84px);line-height:1;margin-top:14px;
+  color:var(--ink-0);
+}
+.members-title .mt-group.is-member{font-size:clamp(30px,4.6vw,66px);}
+@keyframes nameIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.members-title .mt-group.swap{animation:nameIn .45s cubic-bezier(.2,.7,.3,1);}
+.members-title p{font-size:14px;color:var(--ink-1);line-height:1.7;margin-top:26px;max-width:420px;font-family:var(--font-sans);}
+.start-btn{
+  margin-top:clamp(24px,5vh,44px);align-self:flex-start;
+  padding:18px 40px;border-radius:2px;
+  border:1px solid var(--btn-bg);background:var(--btn-bg);
+  color:var(--btn-ink);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  font-family:var(--font-sans);
+  position:relative;
+  transition:background .3s ease, color .3s ease;
+}
+.start-btn:hover{background:transparent;color:var(--ink-0);}
+.start-btn:active{transform:translateY(1px);}
+.member-row{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;max-height:60vh;}
+.member-card{
+  display:flex;align-items:baseline;gap:clamp(14px,3.4vw,50px);
+  padding:16px 0;border-top:1px solid var(--line);
+  flex:1 1 0;min-height:52px;
+  cursor:default;
+  transition:padding-left .3s ease, border-color .3s ease;
+}
+.member-card.has-deck{cursor:pointer;}
+.member-row .member-card:last-child{border-bottom:1px solid var(--line);}
+.member-card:hover{padding-left:14px;border-color:var(--line-strong);}
+.member-avatar{
+  font-family:var(--font-sans);font-size:12px;color:var(--ink-2);letter-spacing:.04em;
+  width:34px;flex-shrink:0;
+}
+.member-card .mname{font-size:17px;font-weight:700;color:var(--ink-0);font-family:var(--font-sans);flex:1;}
+.member-card .mrole{font-size:12px;color:var(--ink-2);font-family:var(--font-sans);letter-spacing:.03em;text-transform:uppercase;}
+.mdeck{
+  font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-1);border:1px solid var(--line-strong);padding:6px 11px;border-radius:2px;
+  margin-right:14px;white-space:nowrap;font-family:var(--font-sans);
+  transition:background .2s ease,color .2s ease,border-color .2s ease;
+}
+.member-card.has-deck:hover .mdeck{background:var(--btn-bg);color:var(--btn-ink);border-color:var(--btn-bg);}
+
+/* ============ STAGE 2: CAROUSEL ============ */
+.carousel-stage{flex-direction:column;align-items:stretch;}
+.stage-head{flex:0 0 auto;}
+/* the shared dimension title lives in flow (JS moves it into whichever stage is showing),
+   so nothing below it can ever slide underneath it */
+.big-title{
+  position:relative;max-width:min(560px,100%);z-index:2;
+  text-align:left;
+  opacity:0;transform:translateY(-20px);pointer-events:none;
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.big-title.show{opacity:1;transform:translateY(0);}
+.big-title .bt-index{font-size:11px;color:var(--ink-2);font-family:var(--font-sans);letter-spacing:.14em;text-transform:uppercase;}
+.big-title h2{font-size:clamp(22px,3vw,36px);margin-top:10px;color:var(--ink-0);transition:color .4s ease;line-height:1.05;}
+.big-title h2.complete{color:var(--accent);}
+.big-title p{font-size:13px;color:var(--ink-1);margin-top:14px;line-height:1.6;max-width:400px;font-family:var(--font-sans);}
+
+.cs-inner,.ds-inner{
+  width:100%;height:100%;min-height:0;
+  display:flex;flex-direction:column;
+  padding:var(--top) var(--pad-x) var(--bottom);
+}
+.carousel-area{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;}
+.carousel-track{
+  position:relative;flex:1 1 auto;min-height:170px;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  perspective:400px;
+  overflow:visible;
+  cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;
+}
+.carousel-track.dragging{cursor:grabbing;}
+.carousel-track.dragging .dim-card{transition:none !important;}
+/* Outer card: position/panel/shadow only. Inner card: the grayscale
+   dimming + hover zoom live here instead — CSS `filter` on the same
+   element as `box-shadow` makes browsers repaint the shadow as a hard
+   rectangle, which was the "shadow on hover" bug. Splitting the two
+   into outer/inner fixes it. */
+.dim-card{
+  position:absolute;height:min(100%,468px);aspect-ratio:400/468;max-width:78vw;border-radius:2px;
+  cursor:inherit;-webkit-user-drag:none;
+  background:var(--panel-bg);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border:1px solid var(--panel-brd);
+  transition:transform .6s cubic-bezier(.2,.7,.3,1), opacity .6s ease, box-shadow .6s ease, border-color .4s ease;
+  box-shadow:var(--panel-shadow);
+  overflow:hidden;
+}
+.dim-card-inner{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  padding:0 clamp(16px,2.4vw,32px);
+  filter:grayscale(1) brightness(.75) contrast(.9);
+  opacity:.55;
+  transition:filter .5s ease, transform .45s cubic-bezier(.2,.7,.3,1), opacity .5s ease;
+}
+.dim-card:hover .dim-card-inner{filter:grayscale(.3) brightness(.95);opacity:.8;transform:scale(1.02);}
+.dim-card.active .dim-card-inner{filter:none;opacity:1;}
+.dim-card.active:hover .dim-card-inner{transform:scale(1.02);}
+.dim-card .dc-num{font-size:12.5px;color:var(--ink-2);font-family:var(--font-sans);letter-spacing:.06em;}
+.dim-card h4{font-size:clamp(18px,3.1vh,24px);margin-top:16px;text-align:left;color:var(--ink-0);}
+.dim-card .dc-progress{margin-top:22px;font-size:12px;color:var(--ink-2);font-family:var(--font-sans);}
+.dim-card.active{
+  border-color:var(--line-strong);
+  box-shadow:0 24px 50px rgba(23,21,18,.14);
+}
+.dim-card.complete{background:var(--bg-3); border-color:var(--line-strong);}
+.dim-card.complete .dc-num{color:var(--ink-0);}
+.dim-card.complete.active{background:var(--bg-2);}
+
+.carousel-arrow{
+  position:fixed;top:50%;transform:translateY(-50%);
+  width:50px;height:50px;border-radius:2px;border:1px solid var(--panel-brd);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel-bg);
+  color:var(--ink-0);font-size:18px;z-index:40;
+  transition:transform .25s ease, background .25s ease, color .25s ease;
+}
+.carousel-arrow:hover{background:var(--btn-bg);color:var(--btn-ink);}
+.carousel-arrow.left{left:clamp(8px,2.4vw,34px);}
+.carousel-arrow.right{right:clamp(8px,2.4vw,34px);}
+
+.dot-row{display:flex;gap:12px;justify-content:center;flex:0 0 auto;padding:16px 0 8px;}
+.dot{
+  width:8px;height:8px;border-radius:0;background:var(--ink-2);opacity:.35;
+  transition:all .3s ease;cursor:pointer;
+}
+.dot.filled{background:var(--ink-0);opacity:1;}
+.drag-hint{
+  flex:0 0 auto;text-align:center;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+  font-family:var(--font-sans);pointer-events:none;
+}
+
+/* ============ STAGE 3: DETAIL (questions + levels) ============ */
+.detail-stage{flex-direction:column;align-items:stretch;}
+.ds-inner{gap:clamp(10px,2.2vh,26px);}
+.ds-body{
+  flex:1;min-height:0;
+  display:grid;grid-template-columns:minmax(220px,30%) minmax(0,1fr);
+  gap:clamp(20px,4vw,64px);align-items:stretch;
+}
+
+/* level list: plain inline "Level N — description" rows.
+   unselected = flat bordered row, selected = solid inverted row.
+   It scrolls on its own only when the screen is too short to show all five. */
+.level-list{
+  display:flex;flex-direction:column;min-height:0;overflow-y:auto;
+  width:100%;max-width:760px;justify-self:end;
+  padding-right:10px;overflow-x:hidden;   /* room for the small slide-right on hover / selected */
+}
+.level-list .ll-tag{font-size:11px;color:var(--ink-2);font-family:var(--font-sans);letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;}
+.level-list h3{font-size:clamp(16px,1.8vw,23px);margin-top:6px;margin-bottom:clamp(8px,1.4vh,14px);color:var(--ink-0);line-height:1.22;flex:0 0 auto;}
+#llLevels{display:flex;flex-direction:column;flex:0 0 auto;}
+.level-card{
+  flex:0 0 auto;
+  border-radius:2px;padding:clamp(11px,2.2vh,22px) 22px;cursor:pointer;
+  border:1px solid var(--panel-brd);border-left:3px solid transparent;
+  background:var(--panel-bg);
+  transition:transform .25s cubic-bezier(.2,.7,.3,1), background .25s ease, border-color .25s ease, color .25s ease;
+  display:flex;align-items:center;
+  font-size:clamp(12px,1.6vh,15px);line-height:1.5;color:var(--ink-1);font-family:var(--font-sans);
+}
+.level-card b{color:var(--ink-0);font-weight:700;margin-right:6px;}
+.level-card:hover{
+  transform:translateX(6px);
+  border-left-color:var(--line-strong);
+}
+.level-card:active{transform:translateX(6px) scale(.99);}
+.level-card.selected{
+  background:var(--btn-bg);color:var(--btn-ink);
+  border-color:var(--btn-bg);
+  border-left:3px solid var(--btn-ink);
+  transform:translateX(6px);
+}
+.level-card.selected b{color:var(--btn-ink);}
+
+/* question list: 4 vertical rows, each showing the question and,
+   once answered, which level was picked. */
+.q-ring{
+  display:flex;flex-direction:column;align-self:start;
+  min-height:0;max-height:100%;overflow-y:auto;
+}
+.q-ring .ring-center{
+  font-size:11px;color:var(--ink-2);font-family:var(--font-sans);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.q-node{
+  position:relative;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:clamp(12px,2.4vh,20px) 4px clamp(12px,2.4vh,20px) 16px;
+  border-top:1px solid var(--line);
+  cursor:pointer;opacity:.55;
+  transition:opacity .3s ease, padding-left .3s ease, border-color .3s ease;
+}
+.q-ring .q-node:last-of-type{border-bottom:1px solid var(--line);}
+.q-node::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--ink-0);opacity:0;transition:opacity .3s ease;
+}
+.q-node:hover, .q-node.focused{opacity:1;padding-left:22px;}
+.q-node:hover::before, .q-node.focused::before{opacity:1;}
+.qn-left{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.q-node .qn-tag{font-size:10.5px;font-weight:700;color:var(--ink-2);letter-spacing:.08em;font-family:var(--font-sans);text-transform:uppercase;}
+.q-node .qn-prompt{font-size:13.5px;color:var(--ink-0);font-family:var(--font-sans);font-weight:600;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.q-node .qn-answer{font-size:12px;color:var(--ink-2);font-family:var(--font-sans);white-space:nowrap;flex-shrink:0;}
+.q-node.answered .qn-answer{color:var(--ink-0);font-weight:700;}
+
+/* previous / next part navigation — two distinct buttons */
+.part-nav{
+  position:fixed;left:50%;bottom:calc(clamp(14px,3.4vh,30px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  display:flex;gap:14px;z-index:40;
+}
+.part-nav-btn{
+  border:1px solid var(--panel-brd);border-radius:2px;
+  padding:14px 26px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-1);font-family:var(--font-sans);
+  background:var(--panel-bg);
+  transition:background .25s ease, color .25s ease;
+}
+.part-nav-btn:hover{background:var(--bg-2);}
+.part-nav-btn.primary{
+  background:var(--btn-bg);color:var(--btn-ink);border:1px solid var(--btn-bg);
+}
+.part-nav-btn.primary:hover{background:transparent;color:var(--ink-0);}
+.part-nav-btn:disabled{opacity:.35;pointer-events:none;}
+
+/* "See your result" button shown on the dimensions carousel once everything is answered */
+.carousel-result{position:fixed;left:50%;bottom:calc(clamp(14px,3.4vh,30px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;display:none;}
+.carousel-result.show{display:block;}
+
+/* ============ STAGE 4: RESULTS — left: title over pattern + action,
+   right: one big chart box. Everything else lives in a slide-out drawer. ============ */
+.results-stage{align-items:stretch;padding-top:0;overflow:hidden;}
+.results-wrap{width:100%;height:100%;margin:0;padding:0;}
+.results-bento{
+  display:grid;height:100%;width:100%;
+  grid-template-columns:38% 62%;
+  background:var(--panel-brd);
+  gap:1px;
+}
+.rb-col{display:flex;flex-direction:column;gap:1px;min-height:0;}
+.rb-cell{
+  background:var(--bg-0);
+  padding:20px 40px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  min-height:0;
+}
+.rb-col-left .rb-title{flex:0 0 auto;justify-content:flex-end;padding-top:70px;padding-bottom:26px;}
+.rb-col-left .rb-pattern{flex:1;justify-content:flex-start;padding-top:28px;padding-bottom:84px;overflow-y:auto; width: fill;}
+.rb-col-chart .rb-chart{flex:1;align-items:center;justify-content:center;padding:56px 8px 8px;position:relative; width: fill;}
+
+.rb-subhead{
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);font-family:var(--font-sans);margin:0 0 10px;flex:0 0 auto;
+}
+
+.results-title h2{font-size:clamp(26px,2.8vw,40px);color:var(--ink-0);line-height:1.05;}
+.results-title p{font-size:12.5px;color:var(--ink-2);margin-top:14px;font-family:var(--font-sans);line-height:1.6;}
+
+.hero-chart{position:relative;width:100%;height:100%;max-width:none;max-height:100%;}
+.chart-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);}
+.svg-radar-host{width:100%;height:100%;}
+
+.archetype-tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-family:var(--font-sans);}
+.archetype-panel h3{font-size:24px;margin-top:10px;color:var(--ink-0);line-height:1.15;flex:0 0 auto;}
+.archetype-desc{
+  font-size:14px;color:var(--ink-1);line-height:1.65;margin-top:14px;
+  font-family:var(--font-sans);flex:0 0 auto;
+}
+.action-box{
+  margin-top:22px;padding:18px 20px;flex:0 0 auto;
+  background:var(--bg-2);border-left:3px solid var(--ink-0);
+}
+.action-box .ab-label{font-size:11px;font-weight:700;color:var(--ink-2);letter-spacing:.06em;font-family:var(--font-sans);}
+.action-box p{font-size:13.5px;color:var(--ink-0);line-height:1.6;margin-top:8px;font-family:var(--font-sans);}
+.result-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;flex:0 0 auto;}
+.res-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 20px;border-radius:2px;border:1px solid var(--panel-brd);
+  background:var(--panel-bg);color:var(--ink-0);
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-sans);
+  transition:background .2s ease,color .2s ease,border-color .2s ease;
+}
+.res-btn:hover{background:var(--bg-2);}
+.res-btn.primary{background:var(--btn-bg);color:var(--btn-ink);border-color:var(--btn-bg);}
+.res-btn.primary:hover{background:transparent;color:var(--ink-0);}
+.res-btn svg{width:14px;height:14px;flex-shrink:0;}
+
+/* ---- slide-out details drawer (sits above everything, blurred backdrop) ---- */
+.details-overlay{
+  position:fixed;inset:0;z-index:100;
+  visibility:hidden;pointer-events:none;
+  transition:visibility 0s linear .5s;
+}
+.details-overlay.open{visibility:visible;pointer-events:auto;transition-delay:0s;}
+.details-backdrop{
+  position:absolute;inset:0;
+  background:transparent;
+  opacity:0;transition:opacity .45s ease;
+}
+.details-overlay.open .details-backdrop{opacity:1;}
+.details-drawer{
+  position:absolute;top:10px;right:0;bottom:10px;
+  width:min(840px,94vw);
+  background:var(--bg-05);
+  -webkit-backdrop-filter:blur(23px);backdrop-filter:blur(23px);
+  color:var(--ink-0);
+  border-left:1px solid var(--panel-brd);
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  box-shadow:-30px 0 80px rgba(0,0,0,.22);
+  transform:translateX(102%);
+  transition:transform .5s cubic-bezier(.2,.7,.3,1);
+  display:flex;flex-direction:column;
+}
+.details-overlay.open .details-drawer{transform:translateX(0);}
+.drawer-head{
+  flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;
+  padding:24px 36px 18px;border-bottom:1px solid var(--line);
+}
+.drawer-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-family:var(--font-sans);}
+.drawer-head h3{font-size:24px;margin-top:6px;line-height:1.1;}
+.drawer-close{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:11px 16px;border:1px solid var(--panel-brd);border-radius:2px;
+  background:var(--panel-bg);color:var(--ink-0);
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-sans);
+  transition:background .2s ease,color .2s ease;
+}
+.drawer-close:hover{background:var(--btn-bg);color:var(--btn-ink);}
+.drawer-close svg{width:12px;height:12px;}
+.drawer-body{
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:22px;
+  padding:22px 36px 26px;overflow-y:auto;
+}
+.drawer-section{display:flex;flex-direction:column;min-height:0;}
+.drawer-lowest{flex:0 0 auto;}
+.drawer-scores{flex:1 0 auto;}
+
+.lowest-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--panel-brd);}
+.lowest-card{
+  padding:16px 18px;border-top:2px solid var(--ink-0);background:var(--panel-bg);
+}
+.lowest-card .lc-label{font-size:10px;color:var(--ink-2);letter-spacing:.06em;font-family:var(--font-sans);}
+.lowest-card h4{font-size:15px;margin:6px 0 0;}
+.lowest-card .lc-score{font-size:12px;font-weight:700;color:var(--ink-0);font-family:var(--font-sans);margin-top:3px;}
+.lowest-card p{font-size:12.5px;color:var(--ink-1);line-height:1.5;margin-top:8px;font-family:var(--font-sans);}
+#scoreList{display:flex;flex-direction:column;flex:1;}
+.score-row{
+  flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;
+  padding:10px 0;border-top:1px solid var(--line);
+}
+.score-row:last-child{border-bottom:1px solid var(--line);}
+.score-row > *{flex-shrink:0;}
+.score-row .sr-top{display:flex;justify-content:space-between;align-items:baseline;}
+.score-row h5{font-size:14px;margin:0;}
+.score-row .sr-val{font-size:15px;font-weight:700;color:var(--ink-0);font-family:var(--font-sans);}
+.score-bar{height:4px;background:var(--line);margin-top:7px;overflow:hidden;}
+.score-bar-fill{height:100%;background:var(--ink-0);transition:width .8s cubic-bezier(.2,.7,.3,1);}
+.score-row p{font-size:12px;color:var(--ink-1);line-height:1.45;margin-top:7px;font-family:var(--font-sans);}
+
+/* shorter laptop screens: tighten the drawer so it still fits without scrolling */
+@media (max-height:800px){
+  .drawer-head{padding:16px 30px 12px;}
+  .drawer-head h3{font-size:20px;}
+  .drawer-body{padding:14px 30px 16px;gap:14px;}
+  .lowest-card{padding:10px 14px;}
+  .lowest-card h4{font-size:13px;margin-top:3px;}
+  .lowest-card p{font-size:11px;line-height:1.4;margin-top:4px;}
+  .score-row{padding:5px 0;}
+  .score-row h5{font-size:12.5px;}
+  .score-row p{font-size:10.5px;line-height:1.35;margin-top:3px;}
+  .score-bar{margin-top:3px;}
+  .rb-col-left .rb-title{padding-top:56px;padding-bottom:14px;}
+  .rb-col-left .rb-pattern{padding-top:16px;}
+  .action-box{margin-top:14px;padding:12px 16px;}
+  .action-box p{font-size:12.5px;line-height:1.5;}
+  .archetype-desc{font-size:13px;line-height:1.55;margin-top:8px;}
+  .result-actions{margin-top:14px;}
+}
+
+/* ============ STAGE 5: FRAMEWORK PRESENTATION (Ai Ky Chung) ============ */
+.framework-stage{align-items:stretch;justify-content:stretch;}
+.fw-wrap{position:relative;width:100%;height:100%;display:flex;flex-direction:column;padding:88px 64px 22px;}
+.fw-slide{
+  flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,31%) 1fr;gap:56px;align-items:start;
+}
+.fw-slide.anim{animation:fwIn .5s cubic-bezier(.2,.7,.3,1);}
+@keyframes fwIn{from{opacity:0;transform:translateX(26px);}to{opacity:1;transform:none;}}
+.fw-left{display:flex;flex-direction:column;padding-top:6px;}
+.fw-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-family:var(--font-sans);line-height:1.6;}
+.fw-title{font-size:clamp(28px,3.3vw,48px);line-height:1.03;margin-top:14px;color:var(--ink-0);}
+.fw-title.xl{font-size:clamp(30px,3.6vw,54px);}
+.fw-slide.is-cover{align-items:center;}
+.fw-blurb{font-size:14px;line-height:1.7;color:var(--ink-1);margin-top:22px;max-width:390px;font-family:var(--font-sans);}
+.fw-presenter{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--font-sans);}
+.fw-presenter span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);}
+.fw-presenter strong{display:block;font-size:20px;margin-top:8px;color:var(--ink-0);}
+.fw-presenter em{display:block;font-style:normal;font-size:12px;color:var(--ink-2);margin-top:4px;letter-spacing:.03em;text-transform:uppercase;}
+.fw-right{min-height:0;max-height:100%;overflow-y:auto;padding-right:4px;padding-top:6px;}
+
+.fw-box{padding:22px 24px;background:var(--bg-2);border-left:3px solid var(--ink-0);font-family:var(--font-sans);}
+.fw-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);}
+.fw-box p{font-size:14.5px;line-height:1.7;color:var(--ink-0);margin-top:10px;}
+.fw-agenda{margin-top:26px;}
+.fw-agenda-row{
+  display:grid;grid-template-columns:54px 1fr auto;gap:16px;align-items:baseline;
+  padding:16px 0;border-top:1px solid var(--line);cursor:pointer;font-family:var(--font-sans);
+  transition:padding-left .25s ease;
+}
+.fw-agenda-row:last-child{border-bottom:1px solid var(--line);}
+.fw-agenda-row:hover{padding-left:12px;}
+.fw-agenda-row b{font-size:13px;color:var(--ink-2);letter-spacing:.04em;}
+.fw-agenda-row span{font-size:16px;font-weight:700;color:var(--ink-0);}
+.fw-agenda-row i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);}
+
+.fw-row{
+  display:grid;grid-template-columns:40px minmax(150px,220px) 1fr;gap:20px;
+  padding:clamp(11px,2.3vh,24px) 0;border-top:1px solid var(--line);font-family:var(--font-sans);
+}
+.fw-row:last-child{border-bottom:1px solid var(--line);}
+.fw-num{font-size:12px;color:var(--ink-2);letter-spacing:.04em;padding-top:3px;}
+.fw-row h4{font-size:clamp(13.5px,2vh,18px);line-height:1.3;margin:0;color:var(--ink-0);}
+.fw-row p{font-size:clamp(12px,1.75vh,15.5px);line-height:1.6;color:var(--ink-1);margin:0;}
+.fw-head-row{display:grid;padding:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-family:var(--font-sans);}
+
+.fw-indep{display:grid;grid-template-columns:70px 1fr;gap:20px;padding:clamp(14px,2.6vh,26px) 0;border-top:1px solid var(--line);align-items:baseline;}
+.fw-indep:last-child{border-bottom:1px solid var(--line);}
+.fw-indep b{font-family:var(--font-display);font-size:clamp(30px,4vh,46px);line-height:1;color:var(--ink-0);}
+.fw-indep p{font-size:clamp(14px,2vh,18px);line-height:1.55;color:var(--ink-0);font-family:var(--font-sans);margin:0;}
+
+/* stage slides: five columns that step up, one per maturity stage */
+.fw-steps{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--font-sans);
+}
+.fw-step{padding:0 clamp(10px,1.2vw,18px) clamp(14px,2.4vh,26px);border-left:1px solid var(--line);}
+.fw-step:first-child{border-left:none;padding-left:0;}
+.fw-step-track{height:clamp(56px,12vh,120px);display:flex;align-items:flex-end;margin-bottom:14px;}
+.fw-step-bar{display:block;width:100%;height:calc(var(--n) * 20%);background:var(--ink-0);}
+.fw-step b{display:block;font-family:var(--font-display);font-size:clamp(22px,3.4vh,32px);line-height:1;color:var(--ink-0);}
+.fw-step h4{font-size:clamp(13px,1.9vh,16px);margin:10px 0 0;color:var(--ink-0);line-height:1.25;}
+.fw-step p{font-size:clamp(12px,1.7vh,14.5px);line-height:1.55;color:var(--ink-1);margin:8px 0 0;}
+/* tablets and below: the same steps as rows with a growing bar */
+@media (max-width:1100px){
+  .fw-steps{grid-template-columns:1fr;}
+  .fw-step{
+    display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-areas:"num title" "bar text";
+    column-gap:20px;padding:12px 0;border-left:none;border-top:1px solid var(--line);
+  }
+  .fw-step:first-child{border-top:none;padding-left:0;}
+  .fw-step b{grid-area:num;font-size:24px;}
+  .fw-step h4{grid-area:title;margin:0;align-self:center;}
+  .fw-step-track{grid-area:bar;height:6px;margin:8px 0 0;align-self:start;}
+  .fw-step-bar{height:100%;width:calc(var(--n) * 20%);}
+  .fw-step p{grid-area:text;margin:4px 0 0;}
+}
+@media (max-width:600px){
+  .fw-step{grid-template-columns:64px minmax(0,1fr);column-gap:14px;}
+}
+
+.fw-calib-head,.fw-calib-row{display:grid;grid-template-columns:minmax(150px,210px) 1fr 1fr;gap:26px;font-family:var(--font-sans);}
+.fw-calib-head{padding:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);}
+.fw-calib-row{padding:clamp(11px,2.3vh,24px) 0;border-top:1px solid var(--line);}
+.fw-calib-row:last-child{border-bottom:1px solid var(--line);}
+.fw-calib-row h4{font-size:clamp(12.5px,1.9vh,16.5px);line-height:1.3;margin:0;color:var(--ink-0);}
+.fw-calib-row p{font-size:clamp(11.5px,1.7vh,15px);line-height:1.55;color:var(--ink-1);margin:0;}
+
+.fw-controls{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding-top:16px;border-top:1px solid var(--line);margin-top:12px;
+}
+.fw-mid{display:flex;align-items:center;gap:16px;font-family:var(--font-sans);}
+.fw-count{font-size:12px;letter-spacing:.08em;color:var(--ink-1);min-width:64px;text-align:center;}
+.fw-ticks{display:flex;gap:6px;}
+.fw-tick{width:28px;height:4px;background:var(--line-strong);opacity:.35;cursor:pointer;transition:opacity .2s ease,width .2s ease;}
+.fw-tick:hover{opacity:.7;}
+.fw-tick.on{opacity:1;background:var(--ink-0);width:40px;}
+.fw-nav{display:flex;gap:12px;}
+@media (max-height:800px){
+  .fw-wrap{padding-top:74px;}
+  .fw-blurb{margin-top:14px;font-size:13px;}
+  .fw-row{padding:8px 0;}
+  .fw-row p{font-size:12px;line-height:1.5;}
+  .fw-calib-row{padding:9px 0;}
+}
+
+/* =====================================================================
+   RESPONSIVE — short windows, tablets and phones.
+   Rule of thumb: nothing important is positioned with hard-coded pixel
+   offsets any more. Titles, lists and cards sit in normal flow inside
+   padded stages, the fixed buttons get reserved space (--top / --bottom),
+   and anything that still doesn't fit scrolls instead of overlapping.
+===================================================================== */
+@media (hover:none){ .cursor-ring{display:none;} }
+
+/* ---- short windows (laptops with toolbars, split screens, landscape phones) ---- */
+@media (max-height:700px){
+  .big-title p{display:none;}
+  .big-title h2{font-size:clamp(20px,4.4vh,30px);margin-top:6px;}
+  .members-title p{margin-top:14px;font-size:13px;}
+  .rb-col-left .rb-title{padding-top:48px;padding-bottom:10px;}
+  .results-title h2{font-size:clamp(20px,4.6vh,30px);}
+  .results-title p{display:none;}
+  .archetype-panel h3{font-size:19px;margin-top:6px;}
+  .archetype-desc{font-size:12.5px;line-height:1.5;margin-top:8px;}
+  .action-box{margin-top:12px;padding:10px 14px;}
+  .action-box p{font-size:12px;line-height:1.45;margin-top:4px;}
+  .result-actions{margin-top:12px;}
+  .res-btn{padding:10px 14px;}
+  .rb-col-left .rb-pattern{padding-top:14px;}
+}
+@media (max-height:560px){
+  :root{--top:52px;--bottom:70px;}
+  .drag-hint,.members-title p{display:none;}
+  .dot-row{padding:8px 0 4px;}
+  .carousel-track{min-height:130px;}
+  .mt-eyebrow{margin-bottom:8px;}
+}
+
+/* ---- tablets and small laptops ---- */
+@media (max-width:1100px){
+  .ds-body{grid-template-columns:minmax(200px,32%) minmax(0,1fr);}
+  .rb-cell{padding-left:28px;padding-right:28px;}
+}
+
+/* ---- phones and portrait tablets: single-column layouts ---- */
+@media (max-width:820px){
+  :root{--top:60px;--bottom:136px;}
+  .eyebrow-tag{font-size:10px;letter-spacing:.1em;left:14px;}
+  .topbar{right:14px;}
+  .cmd-bar{right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  .dock{bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  .dock-left{left:14px;}
+  .dock-right{right:14px;}
+
+  /* team page */
+  #stage-members{align-items:stretch;justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .members-wrap{grid-template-columns:1fr;height:auto;min-height:100%;}
+  .members-divider{display:none;}
+  .members-col{min-height:auto;justify-content:flex-start;padding:calc(var(--top) + 16px) var(--pad-x) 16px;}
+  .members-col.left{padding-bottom:8px;}
+  .members-col.right{justify-content:flex-start;padding-top:32px;padding-bottom:calc(var(--bottom) - 30px);}
+  .member-row{flex:none;max-height:none;}
+  .member-card{flex:none;min-height:68px;}
+  .members-title p{display:block;}
+
+  /* dimensions carousel */
+  .carousel-arrow{width:36px;height:36px;font-size:16px;left:auto;}
+  .carousel-arrow.left{left:4px;}
+  .carousel-arrow.right{right:4px;}
+  .carousel-result{bottom:calc(76px + env(safe-area-inset-bottom,0px));}
+
+  /* questions + levels: chips on top, levels underneath */
+  .ds-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:12px;}
+  .q-ring{flex-direction:row;align-self:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .q-ring .ring-center{display:none;}
+  .q-node{flex:0 0 auto;min-width:118px;padding:10px 14px;border:1px solid var(--panel-brd);border-radius:2px;}
+  .q-ring .q-node:last-of-type{border-bottom:1px solid var(--panel-brd);}
+  .q-node:hover,.q-node.focused{padding-left:14px;}
+  .q-node.focused{border-color:var(--ink-0);}
+  .q-node .qn-prompt{display:none;}
+  .level-list{justify-self:stretch;max-width:none;}
+  .level-list h3{font-size:16px;margin-bottom:8px;}
+  .level-card{padding:10px 14px;font-size:12.5px;line-height:1.45;}
+  .level-card:hover,.level-card.selected{transform:none;}
+  .level-list{padding-right:0;}
+  .part-nav{left:var(--pad-x);right:var(--pad-x);bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:none;gap:10px;}
+  .part-nav .part-nav-btn{flex:1 1 0;padding:12px 10px;font-size:11px;line-height:1.25;text-align:center;}
+
+  /* results: title, pattern, then a tall chart — scroll the page instead of cramming */
+  .results-stage{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .results-wrap{height:auto;min-height:100%;}
+  .results-bento{grid-template-columns:1fr;height:auto;min-height:100%;}
+  .rb-col{min-height:auto;}
+  .rb-cell{overflow:visible;padding:20px var(--pad-x);}
+  .rb-col-left .rb-title{padding-top:calc(var(--top) + 12px);padding-bottom:12px;}
+  .rb-col-left .rb-pattern{overflow:visible;padding-top:16px;padding-bottom:24px;}
+  .rb-col-chart .rb-chart{padding:8px 4px calc(var(--bottom) - 24px);}
+  .hero-chart{height:min(96vw,64vh);min-height:300px;}
+
+  /* framework presentation */
+  .fw-wrap{padding:calc(var(--top) + 8px) var(--pad-x) 14px;}
+  .fw-slide{grid-template-columns:1fr;grid-template-rows:auto;align-content:start;gap:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .fw-slide.is-cover{align-items:start;}
+  .fw-right{overflow:visible;max-height:none;padding-top:0;}
+  .fw-blurb{max-width:none;margin-top:14px;}
+  .fw-presenter{margin-top:20px;}
+}
+
+/* ---- landscape phones: keep the two bottom buttons on one row ---- */
+@media (max-width:820px) and (max-height:560px){
+  :root{--bottom:70px;}
+  .part-nav{left:14px;right:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  .part-nav .part-nav-btn{flex:0 0 auto;padding:10px 14px;}
+  .carousel-result{bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+  .members-col{padding-top:calc(var(--top) + 4px);}
+  /* questions on the left, levels on the right, so the levels get the full height */
+  .ds-body{grid-template-columns:150px minmax(0,1fr);grid-template-rows:none;gap:14px;}
+  .q-ring{flex-direction:column;overflow-x:hidden;overflow-y:auto;align-self:stretch;}
+  .q-node{min-width:0;}
+}
+
+/* ---- phones ---- */
+@media (max-width:600px){
+  .member-card{display:grid;grid-template-columns:28px 1fr auto;column-gap:12px;row-gap:2px;align-items:center;}
+  .member-avatar{width:auto;grid-row:1 / span 2;}
+  .member-card .mname{grid-column:2;grid-row:1;}
+  .mdeck{grid-column:3;grid-row:1 / span 2;margin-right:0;}
+  .member-card .mrole{grid-column:2;grid-row:2;}
+  .start-btn{width:100%;text-align:center;}
+
+  .details-drawer{width:100vw;top:0;bottom:0;border-radius:0;border-left:none;}
+  .lowest-grid{grid-template-columns:1fr;}
+  .drawer-head{padding:14px 16px 10px;}
+  .drawer-body{padding:12px 16px 20px;gap:16px;}
+  .result-actions .res-btn{flex:1 1 auto;justify-content:center;}
+
+  .fw-controls{gap:8px;flex-wrap:nowrap;}
+  .fw-ticks{display:none;}
+  .fw-count{min-width:0;}
+  .fw-controls .part-nav-btn{padding:11px 12px;font-size:11px;}
+  .fw-head-row,.fw-calib-head{display:none;}
+  .fw-row{grid-template-columns:28px 1fr;gap:6px 12px;}
+  .fw-row p{grid-column:2;}
+  .fw-indep{grid-template-columns:48px 1fr;gap:14px;}
+  .fw-agenda-row{grid-template-columns:40px 1fr;gap:6px 12px;}
+  .fw-agenda-row i{grid-column:2;}
+  .fw-calib-row{grid-template-columns:1fr;gap:8px;}
+  .fw-calib-row p::before{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px;}
+  .fw-calib-row p:nth-of-type(1)::before{content:"Stage 1 example (Revlon)";}
+  .fw-calib-row p:nth-of-type(2)::before{content:"Stage 5 example (L\2019 Or\E9al)";}
+}
+</style>
+</head>
+<body>
+<div class="bg-blobs"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+<div class="eyebrow-tag">Digital Maturity · Group 1</div>
+<div class="topbar">
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"><div class="knob"></div></button>
+</div>
+<div class="cmd-bar" id="cmdBar">
+  <div class="cmd-right" id="cmdRight">All Dimensions <span class="cmd-menu-icon">&#9776;</span></div>
+</div>
+
+<!-- results page: bottom-left Restart, bottom-right "Go back" (expands to the left) -->
+<div class="dock dock-left results-only">
+  <div class="dock-pill">
+    <button id="restartBtn" title="Clear all answers and start over">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4v5h5"/></svg>
+      Restart
+    </button>
+  </div>
+</div>
+<div class="dock dock-right results-only">
+  <div class="dock-pill expandable" id="backMenu">
+    <div class="dock-opts">
+      <button class="dock-opt" id="goTeamBtn">Team</button>
+      <button class="dock-opt" id="goDimsBtn">All Dimensions</button>
+    </div>
+    <button id="backTrigger" aria-expanded="false">Go back <span class="cmd-menu-icon">&#9776;</span></button>
+  </div>
+</div>
+
+<!-- dimensions page: bottom-left Examples (expands to the right) -->
+<div class="dock dock-left carousel-only">
+  <div class="dock-pill expandable" id="examplesMenu">
+    <button id="examplesTrigger" aria-expanded="false">Examples <span class="dock-chevron">&#8250;</span></button>
+    <div class="dock-opts">
+      <button class="dock-opt" data-example="revlon">Revlon</button>
+      <button class="dock-opt" data-example="loreal">L&rsquo;Or&eacute;al</button>
+    </div>
+  </div>
+</div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div class="app">
+
+  <!-- STAGE 1: MEMBERS -->
+  <section class="stage active" id="stage-members">
+    <div class="members-wrap">
+      <div class="members-col left">
+        <div class="members-title">
+          <h1>This assessment was created by</h1>
+          <span class="mt-group" id="mtGroup">Group 1</span>
+          <p>Five capability dimensions, twenty diagnostic questions, calibrated to the upstream supply chain and procurement function.</p>
+        </div>
+        <button class="start-btn" id="startBtn">Start Assessment &#8594;</button>
+      </div>
+      <div class="members-divider"></div>
+      <div class="members-col right">
+        <div class="mt-eyebrow">The<br>Team</div>
+        <div class="member-row" id="memberRow"><!-- member rows injected by JS --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 2: CAROUSEL -->
+  <section class="stage carousel-stage" id="stage-carousel">
+    <div class="cs-inner">
+      <div class="stage-head" id="carouselHead">
+        <div class="big-title" id="bigTitle">
+          <div class="bt-index" id="btIndex"></div>
+          <h2 id="btName"></h2>
+          <p id="btDesc"></p>
+        </div>
+      </div>
+      <div class="carousel-area">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <div class="dot-row" id="carouselDots"></div>
+        <div class="drag-hint">&#8592; Drag the cards or use the arrows &#8594;</div>
+      </div>
+    </div>
+    <button class="carousel-arrow left" id="arrowLeft" aria-label="Previous dimension">&#8249;</button>
+    <button class="carousel-arrow right" id="arrowRight" aria-label="Next dimension">&#8250;</button>
+    <button class="part-nav-btn primary carousel-result" id="carouselResultBtn">See your result &#8594;</button>
+  </section>
+
+  <!-- STAGE 3: DETAIL -->
+  <section class="stage detail-stage" id="stage-detail">
+    <div class="ds-inner">
+      <div class="stage-head" id="detailHead"></div>
+      <div class="ds-body">
+        <div class="q-ring" id="qRing"></div>
+        <div class="level-list" id="levelList">
+          <div class="ll-tag" id="llTag"></div>
+          <h3 id="llPrompt"></h3>
+          <div id="llLevels"></div>
+        </div>
+      </div>
+    </div>
+    <div class="part-nav">
+      <button class="part-nav-btn glass" id="prevPartBtn">&#8249; Previous part</button>
+      <button class="part-nav-btn glass primary" id="nextPartBtn">Next question &#8250;</button>
+    </div>
+  </section>
+
+  <!-- STAGE 4: RESULTS -->
+  <section class="stage results-stage" id="stage-results">
+    <div class="results-wrap">
+      <div class="results-bento">
+        <div class="rb-col rb-col-left">
+          <div class="rb-cell rb-title results-title">
+            <h2>Your Maturity Profile</h2>
+            <p>Based on your twenty diagnostic answers across five capability dimensions.</p>
+          </div>
+          <div class="rb-cell rb-pattern archetype-panel">
+            <div class="archetype-tag" id="archTag">PATTERN</div>
+            <h3 id="archName"></h3>
+            <div class="archetype-desc" id="archDesc"></div>
+            <div class="action-box">
+              <div class="ab-label">RECOMMENDED NEXT ACTION</div>
+              <p id="archAction"></p>
+            </div>
+            <div class="result-actions">
+              <button class="res-btn primary" id="detailsBtn">See more details</button>
+              <button class="res-btn" id="downloadPdfBtn" title="Download this result as a PDF file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="rb-col rb-col-chart">
+          <div class="rb-cell rb-chart">
+            <div class="hero-chart" id="heroChart"><canvas id="radarChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- STAGE 5: FRAMEWORK PRESENTATION (Ai Ky Chung) -->
+  <section class="stage framework-stage" id="stage-framework">
+    <div class="fw-wrap">
+      <div class="fw-slide" id="fwSlide"></div>
+      <div class="fw-controls">
+        <button class="part-nav-btn" id="fwBack">&#8592; Team</button>
+        <div class="fw-mid"><div class="fw-ticks" id="fwTicks"></div><div class="fw-count" id="fwCount"></div></div>
+        <div class="fw-nav">
+          <button class="part-nav-btn" id="fwPrev">&#8249; Prev</button>
+          <button class="part-nav-btn primary" id="fwNext">Next &#8250;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- slide-out details drawer: lives outside .app so it sits above everything -->
+<div class="details-overlay" id="detailsOverlay" aria-hidden="true">
+  <div class="details-backdrop" id="detailsBackdrop"></div>
+  <aside class="details-drawer" role="dialog" aria-label="More details">
+    <div class="drawer-head">
+      <div>
+        <div class="drawer-eyebrow">Detailed results</div>
+        <h3>More details</h3>
+      </div>
+      <button class="drawer-close" id="drawerClose" aria-label="Close details">
+        See less
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section drawer-lowest">
+        <h4 class="rb-subhead">Your two lowest dimensions</h4>
+        <div class="lowest-grid" id="lowestGrid"></div>
+      </div>
+      <div class="drawer-section drawer-scores">
+        <h4 class="rb-subhead">Scores by dimension</h4>
+        <div id="scoreList"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+/* =====================================================================
+   DATA
+===================================================================== */
+const MEMBERS = [
+  {name:"Ai Ky Chung", role:"Framework Designer", deck:true},
+  {name:"Linh Tran", role:"Question Author"},
+  {name:"Marie Vo", role:"Question Author"},
+  {name:"Nguyen Le", role:"Tool Builder"}
+];
+
+const DIMENSIONS = [
+{
+  id:"si", name:"Sourcing Intelligence",
+  desc:"How suppliers are selected, evaluated, and swapped when the primary source cannot deliver.",
+  stages:[
+    "Traditional sourcing based on relationships; no negotiation or background checks; savings unmeasured.",
+    "Buyers negotiate off recent RFQs and informal performance history; savings estimated after projects.",
+    "Selection applies total cost of ownership; primary/secondary suppliers reviewed quarterly; savings monitored during projects.",
+    "A formal scorecard ranks suppliers on cost, delivery, and quality; off-scorecard picks require written justification.",
+    "AI agents handle dual sourcing, shift volume on demand, and calculate savings automatically."
+  ],
+  questions:[
+    {id:"SI1", prompt:"How are new suppliers selected for a category?", options:[
+      "Based on existing relationships or whoever responds first, with no negotiation or background check",
+      "Buyers negotiate from the supplier's most recent quoted unit price, using informal knowledge of past issues",
+      "Selection applies total cost of ownership (including freight and payment terms), reviewed quarterly against requirements",
+      "A formal scorecard in the sourcing system (e.g., SAP Ariba) ranks suppliers on total cost, on-time delivery, and quality; a non-top-ranked pick requires written justification",
+      "An AI system selects and shifts sourcing volume across qualified suppliers automatically based on demand and real-time performance"
+    ]},
+    {id:"SI2", prompt:"How is sourcing/negotiation savings tracked?", options:[
+      "Savings are not measured",
+      "Savings are estimated after a sourcing project is completed",
+      "Savings are monitored and reported while the project is in progress",
+      "Finance verifies year-over-year savings against the scorecard for every sourcing decision",
+      "Savings are calculated automatically as volume shifts between suppliers"
+    ]},
+    {id:"SI3", prompt:"How often is an existing supplier's delivery, quality, and cost performance formally reviewed?", options:[
+      "Never — no formal review exists",
+      "Only after a specific issue or complaint",
+      "Quarterly, for primary and secondary suppliers on main purchases",
+      "Continuously via a system-generated scorecard requiring cross-functional sign-off for exceptions",
+      "Continuously and automatically, with an AI agent adjusting sourcing and safety stock in response"
+    ]},
+    {id:"SI4", prompt:"If a qualified primary supplier suddenly cannot deliver, what happens next?", options:[
+      "Buyers scramble for any available alternative with no pre-vetted backup",
+      "Buyers negotiate a one-off replacement based on recent quotes",
+      "A pre-identified secondary supplier, reviewed quarterly, is engaged manually",
+      "A backup supplier from the formal scorecard is engaged, requiring written justification and finance sign-off",
+      "The system automatically shifts volume to a qualified backup and recalculates safety stock"
+    ]}
+  ]
+},
+{
+  id:"bom", name:"BOMs Validation",
+  desc:"How specifications move from engineering to suppliers and stay accurate through mass production.",
+  stages:[
+    "BOMs sent as drawings/spreadsheets; missing parts or wrong revisions found only when suppliers ask.",
+    "BOMs live in the ERP; both parties verify manually before mass production; some changes still slip through.",
+    "ERP updates flow to buyers automatically; manual checks remain; 10–20% of BOMs need correction after release.",
+    "BOMs move PLM→ERP/SAP automatically with approved part numbers; accuracy reported biweekly; duplicates blocked.",
+    "Every change is validated automatically; AI verifies compliant, purchasable parts; open POs and forecasts update themselves."
+  ],
+  questions:[
+    {id:"BOM1", prompt:"How are missing parts or incorrect BOM revisions typically discovered?", options:[
+      "Only when a supplier contacts the company to clarify",
+      "During manual verification both parties perform before mass production",
+      "The ERP notifies buyers automatically of changes, but buyers still manually check other details (lifecycle, unit of measure, etc.)",
+      "The system blocks duplicate items and reports BOM accuracy biweekly",
+      "The AI system validates every change automatically and blocks unapproved/obsolete parts before release"
+    ]},
+    {id:"BOM2", prompt:"What share of released BOMs typically require correction afterward?", options:[
+      "Not tracked; corrections happen reactively when a supplier flags an issue",
+      "Not tracked in aggregate; changes are made as needed after release",
+      "10–20%, tracked informally",
+      "Tracked and reported biweekly at a specific, monitored percentage",
+      "Near-zero, since AI validation blocks non-compliant parts before release"
+    ]},
+    {id:"BOM3", prompt:"How are duplicate items in the BOM/parts system managed?", options:[
+      "Not managed; duplicates accumulate",
+      "Cleaned up manually and irregularly",
+      "Cleaned up periodically, but duplicates recur between clean-ups",
+      "Automatically blocked by the system at time of entry",
+      "Automatically blocked, with root-cause analysis and a new rule created to prevent recurrence"
+    ]},
+    {id:"BOM4", prompt:"When engineering changes a BOM, what happens to related open purchase orders?", options:[
+      "Nothing automatic; buyers must be told separately and check manually",
+      "Buyers manually cross-check open POs against the new version",
+      "The ERP notifies buyers, but POs still require manual updating",
+      "Open POs update automatically once the change moves from PLM to ERP",
+      "Open POs and demand forecasts both update automatically, with obsolete parts blocked and replacements suggested"
+    ]}
+  ]
+},
+{
+  id:"lt", name:"Lead Time Visibility",
+  desc:"How supplier lead times are captured, checked against reality, and used to predict delay.",
+  stages:[
+    "Lead times quoted informally, never checked against actual deliveries.",
+    "Lead times entered once at PO creation; treated as fixed and not compared to real delivery.",
+    "Buyers periodically review actual dates and update critical-part lead times; OTD tracked monthly in shared spreadsheets.",
+    "ERP/SAP tracks actual delivery performance automatically; ASNs flag potential delay before the due date.",
+    "AI/ML predicts lead times from capacity, cycle time, seasonality and freight; urgent cases auto-trigger expedited freight."
+  ],
+  questions:[
+    {id:"LT1", prompt:"How are supplier lead times determined and kept current?", options:[
+      "Informal supplier quotes, often from old data, never checked against actual deliveries",
+      "Entered once in the ERP at PO creation, rarely updated afterward",
+      "Manually updated periodically by buyers for critical parts, based on actual delivery review",
+      "Updated automatically in the ERP/SAP from actual delivery performance across all shipments",
+      "Predicted continuously by an AI/ML model using capacity, cycle time, seasonality, and freight conditions"
+    ]},
+    {id:"LT2", prompt:"How is a potential shipment delay identified?", options:[
+      "Not identified in advance; discovered when the shipment fails to arrive",
+      "Not tracked against a real system; the listed lead time is treated as fixed",
+      "Buyers monitor a daily backorder/open-PO report manually",
+      "The system flags delay risk before the due date using supplier-transmitted ASNs",
+      "The system predicts delay risk via AI/ML and automatically triggers expedited freight"
+    ]},
+    {id:"LT3", prompt:"How is on-time delivery (OTD) performance tracked?", options:[
+      "Not tracked",
+      "Not compared to actual delivery; the ERP's initial lead time is the default",
+      "Tracked monthly in a shared spreadsheet with suppliers",
+      "Tracked automatically for all shipments in the ERP/SAP",
+      "Tracked and fed into a predictive model that adjusts future lead time expectations"
+    ]},
+    {id:"LT4", prompt:"When a shipment is flagged as at risk of delay, what happens?", options:[
+      "Nothing happens until the shipment is confirmed late",
+      "Buyers investigate manually once they notice a problem",
+      "Buyers manually decide whether to expedite, based on reports",
+      "The system recommends expediting and requires only a buyer sign-off",
+      "The system automatically triggers expedited freight with no approval needed"
+    ]}
+  ]
+},
+{
+  id:"sdc", name:"Supplier Digital Collaboration",
+  desc:"How order, production, and shipping information flows between the company and its suppliers.",
+  stages:[
+    "Supplier profiles on paper forms; everything else via email, text, and phone.",
+    "A shared Excel file updated manually by both sides, producing version conflicts.",
+    "A portal/EDI appears for ~20% of orders; production updates and shipping docs still go through Excel or email.",
+    "EDI covers ~65% of activity from samples to mass production; forecasts/timelines still update via Excel.",
+    "~90% of orders and supplier profiles update automatically system-to-system, including live forecasts."
+  ],
+  questions:[
+    {id:"SDC1", prompt:"What share of purchase orders are exchanged with suppliers through a portal or EDI, rather than email/phone/paper?", options:[
+      "0% — all communication is paper, email, text, or phone",
+      "0%, but a shared Excel file (manually updated by both sides) is used instead",
+      "About 20% go through a supplier portal or EDI",
+      "About 65% of activities from sample to mass production go through EDI under PO numbers",
+      "About 90% of orders and supplier profiles update automatically system-to-system"
+    ]},
+    {id:"SDC2", prompt:"How are mass-production updates and shipment documents communicated?", options:[
+      "Exclusively through email, text, and phone",
+      "A shared Excel file both sides update manually, creating version conflicts",
+      "Portal/EDI for POs and invoices, but production updates and shipping docs still go through Excel/email",
+      "EDI under PO numbers for most activities, though forecasts/timelines still update via Excel",
+      "Automatically through system-to-system integration, including live forecasts and shipping documents"
+    ]},
+    {id:"SDC3", prompt:"How is a supplier's profile/master data (contacts, certifications, capacity) kept up to date?", options:[
+      "Recorded on paper forms and not actively updated",
+      "Updated manually in a shared file when someone remembers to",
+      "Partially available through a portal for a minority of suppliers",
+      "Regularly updated for the majority of suppliers through EDI-linked records",
+      "Automatically and continuously updated between company and supplier systems"
+    ]},
+    {id:"SDC4", prompt:"If a supplier changes a production timeline, how does the company find out?", options:[
+      "The supplier calls, emails, or texts to inform the company",
+      "The supplier updates a shared Excel file, and someone eventually notices",
+      "The supplier updates a status field in a PO-only portal, but timeline changes still need a separate email",
+      "The supplier updates it in the EDI-linked system, though it isn't yet fully live for forecasting",
+      "The change is reflected live in the shared system in real time, with capacity and cycle time visible automatically"
+    ]}
+  ]
+},
+{
+  id:"df", name:"Demand Forecast and Planning",
+  desc:"How demand is predicted, reconciled across teams, and turned into purchase orders.",
+  stages:[
+    "No forecast; buyers reorder from experience or when stock runs low; no access to sales records.",
+    "Replenishment forecasts in an Excel file based on recent sales, with no accuracy tracking.",
+    "ERP generates a baseline forecast, but sales/retail/supply chain each adjust their own version.",
+    "Forecast made per category/product in ERP/SAP, accessible to everyone; accuracy tracked; weekly alignment meeting.",
+    "A daily ML model forecasts demand from real-time sales, promotion and order data; 85%+ of POs need no manual adjustment."
+  ],
+  questions:[
+    {id:"DF1", prompt:"How is the demand forecast generated?", options:[
+      "There is no forecast; buyers reorder from experience or when stock runs low, with no access to sales records",
+      "In an Excel file based on recent sales, shared with procurement only when asked",
+      "Generated as a baseline by the ERP from recent sales",
+      "Generated per category/product in ERP/SAP using more than recent sales, accessible to everyone",
+      "Generated daily by a machine learning model using real-time sales, promotion, and order data"
+    ]},
+    {id:"DF2", prompt:"When sales, retail, and supply chain teams each have their own forecast number, how is one figure agreed upon?", options:[
+      "No attempt to reconcile; whichever team orders, orders",
+      "Not applicable — there's only one ad hoc Excel forecast, shared irregularly",
+      "Each team adjusts its own version; no single number is agreed upon",
+      "A weekly meeting led by the Director of Procurement produces one agreed forecast",
+      "A single number is produced automatically by the ML model, with human overrides tracked"
+    ]},
+    {id:"DF3", prompt:"Is forecast accuracy measured, and at what level of detail?", options:[
+      "Not measured at all",
+      "Not measured; the forecast is used without checking it against actual results",
+      "Not measured by product or category",
+      "Measured and tracked per category/product",
+      "Measured continuously, with the model improving over time based on tracked accuracy"
+    ]},
+    {id:"DF4", prompt:"What share of forecast-driven purchase orders require no manual adjustment before being placed?", options:[
+      "0% — no automated forecast-driven POs exist",
+      "Not tracked; POs are placed from manual replenishment decisions",
+      "Not tracked; the ERP baseline forecast requires team-level manual adjustment before use",
+      "Tracked, with most POs still requiring adjustment against the agreed weekly forecast",
+      "Over 85%, with human overrides tracked separately"
+    ]}
+  ]
+}
+];
+
+const PROFILES = {
+  spreadsheet:{
+    name:"Spreadsheet Supply Base",
+    desc:"Supplier performance, BOMs, lead times, production updates, and plans live in Excel files and emails, with no shared system between the company and its suppliers. Problems surface late and get fixed by a handful of experienced people — a risk if they leave.",
+    action:"Move all POs, invoices, and BOMs into SAP S/4HANA and connect the top 20 suppliers through the SAP Business Network supplier portal, so they confirm orders and send invoices online instead of by email."
+  },
+  connected:{
+    name:"Connected Supply Network",
+    desc:"Supplier master data, BOMs, lead times, and the agreed forecast are managed in the ERP. Suppliers send PO confirmations and ASNs daily through the portal and EDI, giving a clear daily view of upstream supply.",
+    action:"Set up an AI agent (e.g. Joule in SAP IBP) to run an automatic daily check comparing BOMs and the next 4 weeks of mass production against the latest supplier updates. When a raw material is at risk, have it auto-order from a pre-approved backup within set limits and alert procurement only when the fix falls outside those limits."
+  },
+  sourcing:{
+    name:"Sourcing Strategy Gap",
+    desc:"BOMs, lead times, supplier updates, and forecasts are well maintained, but the company lacks structured data on supplier capacity, MOQs, compliance certifications, and backup suppliers. When a key supplier cannot deliver, switching is slow.",
+    action:"Build one tier-1 supplier database (e.g. SAP Ariba Supplier Management) where suppliers update their own capacity and MOQs, with automatic alerts before a certificate expires. Qualify at least one backup supplier for each critical raw material and review quarterly."
+  },
+  digitalized:{
+    name:"Digitalized but Not Transforming",
+    desc:"Suppliers send order confirmations and shipping notices daily through the portal and EDI, but ERP lead times stay fixed and are rarely compared with actual deliveries — so delays are discovered only after they happen.",
+    action:"Set up an automatic alert in SAP S/4HANA that flags any order where the supplier's confirmed delivery date is later than the material need date, and have SAP update each supplier's lead time automatically from actual delivery dates."
+  },
+  execution:{
+    name:"Execution Gap",
+    desc:"Supplier master data, BOMs, lead times, and the portal are well established, but demand forecasting remains an uncoordinated spreadsheet, manually adjusted by sales and planning. Procurement places POs on unreliable numbers, and those swings amplify upstream.",
+    action:"Deploy a daily-refreshing AI/ML demand forecasting pilot across the top 50 SKUs — ingesting POS, promotional, and order signals directly into ERP replenishment schedules — targeting an 85% touchless purchase order rate."
+  },
+  fallback:{
+    name:"No Single Dominant Pattern",
+    desc:"Your scores don't match any of the five archetype patterns. No one constraint dominates — maturity is uneven, but without a gap large enough to hold every other dimension back.",
+    action:"The best return comes from lifting your two lowest-scoring dimensions before the gaps widen, rather than polishing dimensions that are already strong."
+  }
+};
+
+/* =====================================================================
+   STATE
+===================================================================== */
+const state = {
+  answers:{},           // questionId -> level(1-5)
+  currentDim:0,          // carousel index
+  detailDim:null,        // dimension index while in detail stage
+  detailFocus:null       // question id currently shown in the level list
+};
+
+function dimComplete(d){ return d.questions.every(q=>state.answers[q.id]!=null); }
+function dimScore(d){
+  if(!dimComplete(d)) return null;
+  const sum = d.questions.reduce((a,q)=>a+state.answers[q.id],0);
+  return sum/d.questions.length;
+}
+function allComplete(){ return DIMENSIONS.every(dimComplete); }
+
+/* =====================================================================
+   THEME
+===================================================================== */
+const html = document.documentElement;
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const next = html.getAttribute('data-theme')==='dark' ? 'light':'dark';
+  html.setAttribute('data-theme',next);
+  if(radarChartInstance) updateChartColors();
+});
+
+/* =====================================================================
+   STAGE NAV
+===================================================================== */
+const stages = {
+  members:document.getElementById('stage-members'),
+  carousel:document.getElementById('stage-carousel'),
+  detail:document.getElementById('stage-detail'),
+  results:document.getElementById('stage-results'),
+  framework:document.getElementById('stage-framework')
+};
+const CMD_RIGHT_TEXT = {
+  members:'All Dimensions',
+  carousel:'Team',
+  detail:'All Dimensions'
+};
+function goTo(name){
+  window.scrollTo(0,0); // defensive: never let a stage transition inherit stray scroll
+  Object.values(stages).forEach(s=>s.classList.remove('active'));
+  stages[name].classList.add('active');
+  document.body.dataset.stage = name;   // drives which bottom docks are visible
+  closeDetails();
+  closeDocks();
+  const bigTitle = document.getElementById('bigTitle');
+  if(name!=='carousel' && name!=='detail') bigTitle.classList.remove('show');
+  // the shared dimension title sits in flow at the top of whichever stage is showing
+  if(name==='carousel') document.getElementById('carouselHead').appendChild(bigTitle);
+  if(name==='detail') document.getElementById('detailHead').appendChild(bigTitle);
+  const cmdBar = document.getElementById('cmdBar');
+  if(CMD_RIGHT_TEXT[name]){
+    cmdBar.classList.remove('hide');
+    document.getElementById('cmdRight').innerHTML = CMD_RIGHT_TEXT[name]+' <span class="cmd-menu-icon">&#9776;</span>';
+  } else {
+    cmdBar.classList.add('hide');
+  }
+  if(name==='carousel') renderCarousel();
+  if(name==='results') renderResults();
+}
+document.getElementById('cmdRight').addEventListener('click', ()=>{
+  const active = Object.keys(stages).find(k=>stages[k].classList.contains('active'));
+  if(active==='carousel') goTo('members'); else goTo('carousel');
+});
+
+/* =====================================================================
+   BOTTOM DOCKS — "Go back" (results), "Examples" (dimensions)
+===================================================================== */
+const EXAMPLE_ANSWERS = {
+  revlon:{SI1:1,SI2:1,SI3:2,SI4:1, BOM1:1,BOM2:2,BOM3:2,BOM4:2, LT1:2,LT2:2,LT3:2,LT4:1, SDC1:1,SDC2:2,SDC3:1,SDC4:1, DF1:2,DF2:1,DF3:1,DF4:1},
+  loreal:{SI1:5,SI2:5,SI3:5,SI4:5, BOM1:5,BOM2:5,BOM3:4,BOM4:5, LT1:4,LT2:4,LT3:4,LT4:4, SDC1:5,SDC2:5,SDC3:5,SDC4:5, DF1:5,DF2:5,DF3:5,DF4:5}
+};
+function closeDocks(){
+  document.querySelectorAll('.dock-pill.expandable').forEach(p=>{
+    p.classList.remove('open');
+    const t = p.querySelector('[aria-expanded]'); if(t) t.setAttribute('aria-expanded','false');
+  });
+}
+function applyExample(key){
+  const a = EXAMPLE_ANSWERS[key];
+  if(!a) return;
+  state.answers = Object.assign({}, a);   // fill every question, replacing anything already picked
+  state.detailFocus = null;
+  renderCarousel();                        // cards flip to 4/4 answered, "See your result" appears
+}
+document.querySelectorAll('.dock-pill.expandable').forEach(pill=>{
+  const trigger = pill.querySelector('[aria-expanded]');
+  trigger.addEventListener('click', e=>{
+    e.stopPropagation();
+    const open = !pill.classList.contains('open');
+    closeDocks();
+    pill.classList.toggle('open', open);
+    trigger.setAttribute('aria-expanded', String(open));
+  });
+  // after choosing an option, fold the menu away until the pointer leaves
+  pill.querySelectorAll('.dock-opt').forEach(o=>o.addEventListener('click', ()=>{
+    pill.classList.remove('open'); pill.classList.add('hold-closed');
+  }));
+  pill.addEventListener('pointerleave', ()=>pill.classList.remove('hold-closed'));
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('.dock-pill.expandable')) closeDocks(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDocks(); });
+document.getElementById('goTeamBtn').addEventListener('click', ()=>goTo('members'));
+document.getElementById('goDimsBtn').addEventListener('click', ()=>goTo('carousel'));
+document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click', ()=>applyExample(b.dataset.example)));
+
+/* decorative cursor ring over hero zones */
+const cursorRing = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e=>{
+  cursorRing.style.left = e.clientX+'px';
+  cursorRing.style.top = e.clientY+'px';
+});
+document.querySelectorAll('#memberRow, #carouselTrack').forEach(zone=>{
+  zone.addEventListener('mouseenter', ()=>cursorRing.classList.add('show'));
+  zone.addEventListener('mouseleave', ()=>cursorRing.classList.remove('show'));
+});
+
+/* =====================================================================
+   STAGE 1 — MEMBERS
+   Hover (or focus) a name and the "Group 1" headline becomes that member's
+   name. Ai Ky Chung's row also opens her framework presentation.
+===================================================================== */
+function renderMembers(){
+  const row = document.getElementById('memberRow');
+  const groupEl = document.getElementById('mtGroup');
+  row.innerHTML='';
+
+  const setFocus = (i)=>{
+    const label = i===null ? 'Group 1' : MEMBERS[i].name;
+    if(groupEl.textContent!==label){
+      groupEl.textContent = label;
+      groupEl.classList.toggle('is-member', i!==null);
+      groupEl.classList.remove('swap'); void groupEl.offsetWidth; groupEl.classList.add('swap');
+    }
+  };
+
+  MEMBERS.forEach((m,i)=>{
+    const card = document.createElement('div');
+    card.className='member-card'+(m.deck?' has-deck':'');
+    card.tabIndex = 0;
+    card.innerHTML = `<div class="member-avatar">0${i+1}</div>
+      <div class="mname">${m.name}</div>
+      ${m.deck?'<div class="mdeck">Presentation &#8594;</div>':''}
+      <div class="mrole">${m.role}</div>`;
+    card.addEventListener('pointerenter', ()=>setFocus(i));
+    card.addEventListener('focus', ()=>setFocus(i));
+    card.addEventListener('blur', ()=>setFocus(null));
+    if(m.deck){
+      card.addEventListener('click', ()=>openFramework());
+      card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openFramework(); } });
+    }
+    row.appendChild(card);
+  });
+  row.addEventListener('pointerleave', ()=>setFocus(null));
+}
+renderMembers();
+
+document.getElementById('startBtn').addEventListener('click', ()=>goTo('carousel'));
+
+/* =====================================================================
+   STAGE 2 — CAROUSEL  (click the arrows, or hold and drag the cards)
+===================================================================== */
+const track = document.getElementById('carouselTrack');
+let CARD_STEP = 340;   // re-measured from the real card width so it scales with the screen
+let dragJustEnded = false;
+function renderCarousel(){
+  track.innerHTML='';
+  DIMENSIONS.forEach((d,i)=>{
+    const card = document.createElement('div');
+    card.className='dim-card';
+    const complete = dimComplete(d);
+    if(complete) card.classList.add('complete');
+    const answeredCount = d.questions.filter(q=>state.answers[q.id]!=null).length;
+    card.innerHTML = `<div class="dim-card-inner">
+      <div class="dc-num">DIMENSION ${i+1}</div>
+      <h4>${d.name}</h4>
+      <div class="dc-progress">${answeredCount}/4 answered</div>
+    </div>`;
+    card.addEventListener('click', ()=>{
+      if(dragJustEnded) return;               // a drag is not a click
+      if(i===state.currentDim){ openDetail(i); }
+      else { state.currentDim=i; layoutCarousel(); }
+    });
+    track.appendChild(card);
+  });
+  layoutCarousel();
+}
+const lerp = (a,b,t)=>a+(b-a)*t;
+/* position every card for a (possibly fractional) offset from the centre;
+   a whole number gives the resting layout, a fraction is a live drag */
+function positionCards(shift){
+  const c0 = track.querySelector('.dim-card');
+  if(c0 && c0.offsetWidth) CARD_STEP = c0.offsetWidth*0.85;
+  track.querySelectorAll('.dim-card').forEach((c,i)=>{
+    const offset = i-state.currentDim+shift;
+    const dist = Math.abs(offset);
+    const scale = dist<=1 ? lerp(1,.76,dist) : (dist<=2 ? lerp(.76,.58,dist-1) : .58);
+    const opacity = dist<=1 ? lerp(1,.85,dist) : (dist<=2 ? lerp(.85,.5,dist-1) : Math.max(0,lerp(.5,0,dist-2)));
+    const rotY = Math.max(-3,Math.min(3,offset))*-14;
+    c.style.transform = `translateX(${offset*CARD_STEP}px) scale(${scale}) rotateY(${rotY}deg)`;
+    c.style.opacity = opacity;
+    c.style.zIndex = Math.round(10-dist);
+    c.classList.toggle('active', Math.abs(offset)<0.5);
+  });
+}
+function layoutCarousel(){
+  positionCards(0);
+  // header
+  const d = DIMENSIONS[state.currentDim];
+  updateBigTitle(`DIMENSION ${state.currentDim+1} / 5`, d.name, d.desc, dimComplete(d));
+  // dots
+  const dotRow = document.getElementById('carouselDots');
+  dotRow.innerHTML='';
+  d.questions.forEach(q=>{
+    const dot = document.createElement('div');
+    dot.className='dot'+(state.answers[q.id]!=null?' filled':'');
+    dot.title=q.id;
+    dot.addEventListener('click', ()=>openDetail(state.currentDim, q.id));
+    dotRow.appendChild(dot);
+  });
+  document.getElementById('carouselResultBtn').classList.toggle('show', allComplete());
+}
+function stepCarousel(steps){
+  const n = DIMENSIONS.length;
+  state.currentDim = ((state.currentDim+steps)%n+n)%n;
+  layoutCarousel();
+}
+window.addEventListener('resize', ()=>{ if(stages.carousel.classList.contains('active')) positionCards(0); });
+document.getElementById('arrowLeft').addEventListener('click', ()=>stepCarousel(-1));
+document.getElementById('arrowRight').addEventListener('click', ()=>stepCarousel(1));
+
+/* hold + drag (mouse, pen or touch) */
+let drag = null;
+track.addEventListener('pointerdown', e=>{
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  drag = {x:e.clientX, dx:0, moved:false};
+});
+window.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  drag.dx = e.clientX-drag.x;
+  if(!drag.moved && Math.abs(drag.dx)>6){ drag.moved=true; track.classList.add('dragging'); }
+  if(drag.moved) positionCards(drag.dx/CARD_STEP);
+});
+function endDrag(){
+  if(!drag) return;
+  const d = drag; drag = null;
+  track.classList.remove('dragging');
+  if(!d.moved) return;
+  dragJustEnded = true; setTimeout(()=>{ dragJustEnded=false; }, 60);
+  let steps = Math.round(-d.dx/CARD_STEP);
+  if(steps===0 && Math.abs(d.dx)>60) steps = d.dx<0 ? 1 : -1;
+  steps = Math.max(-2,Math.min(2,steps));
+  if(steps===0){ positionCards(0); }   // not far enough: snap back
+  else stepCarousel(steps);
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+
+/* =====================================================================
+   SHARED BIG TITLE (single element — used by carousel & detail stages
+   so the two never duplicate/overlap on screen)
+===================================================================== */
+function updateBigTitle(indexText, name, desc, complete){
+  const bt = document.getElementById('bigTitle');
+  bt.classList.remove('show');
+  void bt.offsetWidth; // reflow to retrigger the slide-down animation
+  document.getElementById('btIndex').textContent = indexText;
+  const nameEl = document.getElementById('btName');
+  nameEl.textContent = name;
+  nameEl.classList.toggle('complete', complete);
+  document.getElementById('btDesc').textContent = desc;
+  requestAnimationFrame(()=>bt.classList.add('show'));
+}
+
+/* =====================================================================
+   STAGE 3 — DETAIL (question ring: 4 question nodes orbiting a quiet
+   center; the 5 levels for the focused question are always visible
+   in the list on the left; previous/next part buttons at the bottom)
+===================================================================== */
+function openDetail(dimIndex, focusQid){
+  state.detailDim = dimIndex;
+  state.detailFocus = focusQid || null;
+  goTo('detail');
+  renderDetail(focusQid);
+}
+
+function renderDetail(focusQid){
+  const d = DIMENSIONS[state.detailDim];
+  updateBigTitle(`DIMENSION ${state.detailDim+1} / 5`, d.name, d.desc, dimComplete(d));
+
+  if(!focusQid){
+    const stillValid = state.detailFocus && d.questions.some(q=>q.id===state.detailFocus);
+    focusQid = stillValid ? state.detailFocus : (d.questions.find(q=>state.answers[q.id]==null) || d.questions[0]).id;
+  }
+  state.detailFocus = focusQid;
+
+  const ring = document.getElementById('qRing');
+  ring.innerHTML='';
+  const answeredCount = d.questions.filter(q=>state.answers[q.id]!=null).length;
+  const center = document.createElement('div');
+  center.className='ring-center';
+  center.textContent = `Questions · ${answeredCount}/${d.questions.length} answered`;
+  ring.appendChild(center);
+
+  d.questions.forEach(q=>{
+    const answered = state.answers[q.id]!=null;
+    const node = document.createElement('div');
+    node.className = 'q-node'
+      + (answered ? ' answered' : '')
+      + (q.id===focusQid ? ' focused' : '');
+    node.innerHTML = `<div class="qn-left">
+        <div class="qn-tag">${q.id}</div>
+        <div class="qn-prompt">${q.prompt}</div>
+      </div>
+      <div class="qn-answer">${answered?`Level ${state.answers[q.id]}`:'&mdash;'}</div>`;
+    node.addEventListener('click', ()=>renderDetail(q.id));
+    ring.appendChild(node);
+  });
+
+  renderLevelList(d, d.questions.find(q=>q.id===focusQid));
+  updatePartNav(d);
+}
+
+function updatePartNav(d){
+  const isLast = state.detailDim === DIMENSIONS.length-1;
+  const isFirst = state.detailDim === 0;
+  const prevBtn = document.getElementById('prevPartBtn');
+  const nextBtn = document.getElementById('nextPartBtn');
+
+  prevBtn.textContent = isFirst ? '\u2190 Back to dimensions' : `\u2190 Previous part`;
+  prevBtn.onclick = ()=>{
+    if(isFirst){ state.currentDim = state.detailDim; goTo('carousel'); }
+    else { state.detailDim -= 1; state.detailFocus = null; renderDetail(); }
+  };
+
+  const nextUnanswered = d.questions.find(q=>state.answers[q.id]==null);
+  if(nextUnanswered){
+    nextBtn.textContent = 'Next question \u2192';
+    nextBtn.onclick = ()=>renderDetail(nextUnanswered.id);
+  } else if(allComplete()){
+    nextBtn.textContent = 'See your result \u2192';
+    nextBtn.onclick = ()=>goTo('results');
+  } else if(!isLast){
+    nextBtn.textContent = `Next part \u2192`;
+    nextBtn.onclick = ()=>{ state.detailDim += 1; state.detailFocus = null; renderDetail(); };
+  } else {
+    nextBtn.textContent = 'Back to dimensions';
+    nextBtn.onclick = ()=>{ state.currentDim = state.detailDim; goTo('carousel'); };
+  }
+}
+
+function renderLevelList(d, q){
+  document.getElementById('llTag').textContent = `${q.id} · ${d.name}`;
+  document.getElementById('llPrompt').textContent = q.prompt;
+  const list = document.getElementById('llLevels');
+  list.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const lvl = i+1;
+    const card = document.createElement('div');
+    card.className = 'level-card'+(state.answers[q.id]===lvl?' selected':'');
+    card.innerHTML = `<span>${opt}</span>`;
+    card.addEventListener('click', ()=>{
+      state.answers[q.id]=lvl;
+      // auto-advance to the next unanswered question in this dimension, if any
+      const nextUnanswered = d.questions.find(nq=>nq.id!==q.id && state.answers[nq.id]==null);
+      renderDetail(nextUnanswered ? nextUnanswered.id : q.id);
+    });
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('carouselResultBtn').addEventListener('click', ()=>goTo('results'));
+
+/* =====================================================================
+   STAGE 4 — RESULTS
+===================================================================== */
+let radarChartInstance=null;
+function getCssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* Pure-SVG radar chart — zero network dependency. Used whenever Chart.js
+   can't load from either CDN, so the results page always has a real,
+   visual chart rather than a blank panel or a plain number list. */
+function wrapLabelLines(text, maxLine){
+  if(text.length <= maxLine) return [text];
+  const words = text.split(' ');
+  let line1='', line2='';
+  for(const w of words){
+    if(!line2 && (line1+' '+w).trim().length <= Math.ceil(text.length/2)+3){
+      line1 = (line1+' '+w).trim();
+    } else {
+      line2 = (line2+' '+w).trim();
+    }
+  }
+  return line2 ? [line1,line2] : [line1];
+}
+function renderSvgRadar(container, labels, scores, maxVal){
+  maxVal = maxVal || 5;
+  const W=740, H=580, cx=W/2, cy=300, R=232, n=labels.length;
+  const line = getCssVar('--line') || '#ccc';
+  const ink1 = getCssVar('--ink-1') || '#666';
+  const ink2 = getCssVar('--ink-2') || '#999';
+  const gradA = getCssVar('--grad-a') || '#A78BFA';
+  const gradB = getCssVar('--grad-b') || '#F472B6';
+  const gradC = getCssVar('--grad-c') || '#60A5FA';
+  const pt = (val,i)=>{
+    const angle = -Math.PI/2 + i*(2*Math.PI/n);
+    const r = (val/maxVal)*R;
+    return [cx+Math.cos(angle)*r, cy+Math.sin(angle)*r];
+  };
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" style="max-height:100%;display:block;margin:0 auto;overflow:visible;">
+    <defs>
+      <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${gradA}"/><stop offset="50%" stop-color="${gradB}"/><stop offset="100%" stop-color="${gradC}"/>
+      </linearGradient>
+      <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${gradA}" stop-opacity=".35"/><stop offset="50%" stop-color="${gradB}" stop-opacity=".25"/><stop offset="100%" stop-color="${gradC}" stop-opacity=".35"/>
+      </linearGradient>
+    </defs>`;
+  // grid rings
+  for(let ring=1; ring<=maxVal; ring++){
+    const ptsStr = labels.map((_,i)=>pt(ring,i).join(',')).join(' ');
+    svg += `<polygon points="${ptsStr}" fill="none" stroke="${line}" stroke-width="1"/>`;
+  }
+  // tick numbers along the top axis
+  for(let ring=1; ring<=maxVal; ring++){
+    const y = cy - (ring/maxVal)*R;
+    svg += `<text x="${cx+8}" y="${y+4}" font-size="10" fill="${ink2}" font-family="Inter, sans-serif">${ring}</text>`;
+  }
+  // axis lines + labels
+  labels.forEach((lab,i)=>{
+    const angle = -Math.PI/2 + i*(2*Math.PI/n);
+    const [x2,y2] = pt(maxVal,i);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="${line}" stroke-width="1"/>`;
+    const lx = cx + Math.cos(angle)*(R+18);
+    const ly = cy + Math.sin(angle)*(R+18);
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
+    const anchor = cosA > 0.2 ? 'start' : (cosA < -0.2 ? 'end' : 'middle');
+    const lines = wrapLabelLines(lab, 15);
+    const baseDy = sinA > 0.5 ? 12 : (sinA < -0.5 ? -3 : 5);
+    svg += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" font-size="12.5" fill="${ink1}" font-family="Inter, sans-serif" font-weight="700">`;
+    lines.forEach((ln,li)=>{ svg += `<tspan x="${lx}" dy="${li===0?baseDy:16}">${ln}</tspan>`; });
+    svg += `</text>`;
+  });
+  // data polygon
+  const dataPts = scores.map((v,i)=>pt(v,i).join(',')).join(' ');
+  svg += `<polygon points="${dataPts}" fill="url(#radarFill)" stroke="url(#radarStroke)" stroke-width="3"/>`;
+  scores.forEach((v,i)=>{
+    const [x,y] = pt(v,i);
+    svg += `<circle cx="${x}" cy="${y}" r="6" fill="${gradB}" stroke="#fff" stroke-width="2"/>`;
+  });
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
+
+function detectProfile(scores){
+  const vals = DIMENSIONS.map(d=>scores[d.id]);
+  const allHigh = vals.every(v=>v>=4.0);
+  const allLow = vals.every(v=>v<=2.0);
+  if(allHigh) return {key:'connected',...PROFILES.connected};
+  if(allLow) return {key:'spreadsheet',...PROFILES.spreadsheet};
+
+  const others = (excludeId)=>DIMENSIONS.filter(d=>d.id!==excludeId).map(d=>scores[d.id]);
+  const avg = arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+
+  const siOthers = avg(others('si'));
+  if(scores.si <= siOthers-2.0) return {key:'sourcing',...PROFILES.sourcing};
+
+  const dfOthers = avg(others('df'));
+  if(scores.df <= dfOthers-2.0) return {key:'execution',...PROFILES.execution};
+
+  if(scores.lt<=2.5 && scores.sdc>=3.5) return {key:'digitalized',...PROFILES.digitalized};
+
+  return {key:'fallback',...PROFILES.fallback};
+}
+
+function renderResults(){
+  const scores={};
+  DIMENSIONS.forEach(d=>{ scores[d.id]=dimScore(d) ?? 0; });
+
+  // Always start from a fresh canvas: if a previous render fell back to the
+  // SVG radar (Chart.js unavailable), it replaced the canvas in the DOM —
+  // without restoring it here, a later re-render (theme toggle, restart and
+  // retry) would find #radarChart missing and crash.
+  radarChartInstance = null;
+  document.getElementById('heroChart').innerHTML = '<canvas id="radarChart"></canvas>';
+
+  // Chart.js loads from a CDN — if it's blocked (offline, school network,
+  // ad-blocker) don't let that take the whole results page down with it.
+  try{
+    if(typeof Chart === 'undefined') throw new Error('Chart.js did not load');
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    if(radarChartInstance) radarChartInstance.destroy();
+    const ink = getCssVar('--ink-1');
+    const line = getCssVar('--line');
+    const gradA = getCssVar('--grad-a'), gradB = getCssVar('--grad-b'), gradC = getCssVar('--grad-c');
+    const w = ctx.canvas.clientWidth || 700, h = ctx.canvas.clientHeight || 700;
+    const strokeGrad = ctx.createLinearGradient(0,0,w,h);
+    strokeGrad.addColorStop(0, gradA);
+    strokeGrad.addColorStop(.5, gradB);
+    strokeGrad.addColorStop(1, gradC);
+    const fillGrad = ctx.createLinearGradient(0,0,w,h);
+    fillGrad.addColorStop(0, gradA+'55');
+    fillGrad.addColorStop(.5, gradB+'40');
+    fillGrad.addColorStop(1, gradC+'55');
+    radarChartInstance = new Chart(ctx,{
+      type:'radar',
+      data:{
+        labels:DIMENSIONS.map(d=>d.name),
+        datasets:[{
+          label:'Your maturity',
+          data:DIMENSIONS.map(d=>scores[d.id]),
+          backgroundColor:fillGrad,
+          borderColor:strokeGrad,
+          borderWidth:3,
+          pointBackgroundColor:gradB,
+          pointBorderColor:'#fff',
+          pointBorderWidth:2,
+          pointRadius:6,
+          pointHoverRadius:8
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        layout:{padding:4},
+        animation:{duration:900,easing:'easeOutQuart'},
+        scales:{ r:{
+          min:0,max:5,ticks:{stepSize:1,color:ink,backdropColor:'transparent',font:{family:"Inter, sans-serif",size:11}},
+          grid:{color:line}, angleLines:{color:line},
+          pointLabels:{color:getCssVar('--ink-0'),font:{family:"Inter, sans-serif",size:14,weight:'700'},callback:(l)=>wrapLabelLines(l,15)}
+        }},
+        plugins:{legend:{display:false}}
+      }
+    });
+  }catch(err){
+    console.error('Radar chart library unavailable, drawing built-in SVG radar instead:', err);
+    const panel = document.getElementById('heroChart');
+    if(panel){
+      panel.innerHTML = `<div class="chart-fallback"><div id="svgRadarHost" class="svg-radar-host"></div></div>`;
+      renderSvgRadar(document.getElementById('svgRadarHost'), DIMENSIONS.map(d=>d.name), DIMENSIONS.map(d=>scores[d.id]));
+    }
+  }
+
+  const profile = detectProfile(scores);
+  document.getElementById('archTag').textContent = 'PATTERN';
+  document.getElementById('archName').textContent = profile.name;
+  document.getElementById('archDesc').textContent = profile.desc;
+  document.getElementById('archAction').textContent = profile.action;
+
+  // lowest two
+  const sorted = [...DIMENSIONS].sort((a,b)=>scores[a.id]-scores[b.id]);
+  const lowestTwo = sorted.slice(0,2);
+  window.__lastResult = {scores, profile, lowestTwo};
+  const lowestGrid = document.getElementById('lowestGrid');
+  lowestGrid.innerHTML='';
+  lowestTwo.forEach(d=>{
+    const card=document.createElement('div');
+    card.className='lowest-card';
+    card.innerHTML=`<div class="lc-label"></div>
+      <h4>${d.name}</h4>
+      <div class="lc-score">Score ${scores[d.id].toFixed(2)} of 5</div>
+      <p>${stageActionFor(d,scores[d.id])}</p>`;
+    lowestGrid.appendChild(card);
+  });
+
+  const scoreList = document.getElementById('scoreList');
+  scoreList.innerHTML='';
+  DIMENSIONS.forEach(d=>{
+    const s = scores[d.id];
+    const stageIdx = Math.min(5,Math.max(1,Math.round(s)))-1;
+    const row=document.createElement('div');
+    row.className='score-row';
+    row.innerHTML=`<div class="sr-top"><h5>${d.name}</h5><div class="sr-val">${s.toFixed(2)}</div></div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${s/5*100}%"></div></div>
+      <p><strong>Closest to Stage ${stageIdx+1}.</strong> ${d.stages[stageIdx]}</p>`;
+    scoreList.appendChild(row);
+  });
+}
+function stageActionFor(d,score){
+  const map = {si:'sourcing', df:'execution'};
+  if(map[d.id] && PROFILES[map[d.id]]) return PROFILES[map[d.id]].action;
+  if(d.id==='lt'||d.id==='sdc') return PROFILES.digitalized.action;
+  return `Prioritize closing the gap on ${d.name.toLowerCase()} — it is currently the strongest constraint on the rest of the profile.`;
+}
+function updateChartColors(){ if(document.getElementById('stage-results').classList.contains('active')) renderResults(); }
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  state.answers={}; state.currentDim=0; state.detailDim=null; state.detailFocus=null;
+  goTo('members');
+});
+/* =====================================================================
+   DETAILS DRAWER (slide-out overlay)
+===================================================================== */
+function openDetails(){
+  const o = document.getElementById('detailsOverlay');
+  o.classList.add('open'); o.setAttribute('aria-hidden','false');
+}
+function closeDetails(){
+  const o = document.getElementById('detailsOverlay');
+  o.classList.remove('open'); o.setAttribute('aria-hidden','true');
+}
+document.getElementById('detailsBtn').addEventListener('click', openDetails);
+document.getElementById('drawerClose').addEventListener('click', closeDetails);
+document.getElementById('detailsBackdrop').addEventListener('click', closeDetails);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetails(); });
+
+/* =====================================================================
+   PDF EXPORT — a tiny dependency-free PDF writer, so "Download PDF"
+   works offline and never depends on a CDN. Standard Helvetica fonts,
+   vector radar chart, two pages (profile + details).
+===================================================================== */
+const PDF_WR = {32:278,33:278,34:355,35:556,36:556,37:889,38:667,39:191,40:333,41:333,42:389,43:584,44:278,45:333,46:278,47:278,
+  58:278,59:278,60:584,61:584,62:584,63:556,64:1015,
+  65:667,66:667,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:500,75:667,76:556,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,
+  91:278,92:278,93:278,94:469,95:556,96:333,
+  97:556,98:556,99:500,100:556,101:556,102:278,103:556,104:556,105:222,106:222,107:500,108:222,109:833,110:556,111:556,112:556,113:556,114:333,115:500,116:278,117:556,118:500,119:722,120:500,121:500,122:500,
+  123:334,124:260,125:334,126:584,151:1000,150:556,149:350,183:278};
+const PDF_WB = {32:278,33:333,34:474,35:556,36:556,37:889,38:722,39:238,40:333,41:333,42:389,43:584,44:278,45:333,46:278,47:278,
+  58:333,59:333,60:584,61:584,62:584,63:611,64:975,
+  65:722,66:722,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:556,75:722,76:611,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,
+  91:333,92:278,93:333,94:584,95:556,96:333,
+  97:556,98:611,99:556,100:611,101:556,102:333,103:611,104:611,105:278,106:278,107:556,108:278,109:889,110:611,111:611,112:611,113:611,114:389,115:556,116:333,117:611,118:556,119:778,120:556,121:556,122:500,
+  123:389,124:280,125:389,126:584,151:1000,150:556,149:350,183:278};
+for(let c=48;c<=57;c++){ PDF_WR[c]=556; PDF_WB[c]=556; }
+
+function pdfClean(s){
+  return String(s)
+    .replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"')
+    .replace(/\u2014/g,'\u0097').replace(/\u2013/g,'\u0096')
+    .replace(/\u2192/g,'->').replace(/\u2265/g,'>=').replace(/\u2264/g,'<=')
+    .replace(/\u2026/g,'...').replace(/\u00A0/g,' ')
+    .replace(/[^\x20-\x7E\u0095\u0096\u0097\u00B7]/g,'?');
+}
+function pdfEsc(s){
+  let o='';
+  for(const ch of s){
+    const c = ch.charCodeAt(0);
+    if(ch==='('||ch===')'||ch==='\\') o += '\\'+ch;
+    else if(c<32||c>126) o += '\\'+c.toString(8).padStart(3,'0');
+    else o += ch;
+  }
+  return o;
+}
+
+function buildResultPdf(res){
+  const PW=612, PH=792, M=48, CW=PW-2*M;
+  const pages=[]; let ops=null;
+  const newPage=()=>{ ops=[]; pages.push(ops); };
+  const n=v=>String(Math.round(v*100)/100);
+  const rgb=c=>c.map(n).join(' ');
+  const BLACK=[.09,.08,.07], INK=[.2,.19,.17], GRAY=[.45,.43,.4], LIGHT=[.84,.83,.8], PALE=[.94,.93,.91];
+  const tw=(s,size,bold)=>{ const T=bold?PDF_WB:PDF_WR; let w=0; for(let i=0;i<s.length;i++) w+=(T[s.charCodeAt(i)]||556); return w*size/1000; };
+  const wrap=(s,size,bold,maxW)=>{
+    const words=pdfClean(s).split(/\s+/).filter(Boolean); const lines=[]; let cur='';
+    for(const w of words){
+      const t = cur ? cur+' '+w : w;
+      if(!cur || tw(t,size,bold)<=maxW) cur=t; else { lines.push(cur); cur=w; }
+    }
+    if(cur) lines.push(cur);
+    return lines;
+  };
+  const text=(x,y,s,size,bold,color,align)=>{
+    s=pdfClean(s); const w=tw(s,size,bold);
+    const px = align==='r' ? x-w : (align==='c' ? x-w/2 : x);
+    ops.push(`BT /${bold?'F2':'F1'} ${size} Tf ${rgb(color)} rg ${n(px)} ${n(PH-y)} Td (${pdfEsc(s)}) Tj ET`);
+  };
+  const para=(x,y,s,size,bold,color,maxW,lead)=>{
+    const ls=wrap(s,size,bold,maxW);
+    ls.forEach((l,i)=>text(x,y+i*lead,l,size,bold,color));
+    return y+ls.length*lead;
+  };
+  const line=(x1,y1,x2,y2,w,color)=>ops.push(`${rgb(color)} RG ${n(w)} w ${n(x1)} ${n(PH-y1)} m ${n(x2)} ${n(PH-y2)} l S`);
+  const rect=(x,y,w,h,fill)=>ops.push(`${rgb(fill)} rg ${n(x)} ${n(PH-y-h)} ${n(w)} ${n(h)} re f`);
+  const poly=(pts,fill,stroke,sw,soft)=>{
+    let o = soft ? '/GS1 gs ' : '';
+    if(fill) o+=`${rgb(fill)} rg `;
+    if(stroke) o+=`${rgb(stroke)} RG ${n(sw||1)} w `;
+    o += pts.map((p,i)=>`${n(p[0])} ${n(PH-p[1])} ${i?'l':'m'}`).join(' ')+' h '+(fill&&stroke?'B':(fill?'f':'S'));
+    if(soft) o+=' /GS0 gs';
+    ops.push(o);
+  };
+  const circle=(cx,cy,r,fill,stroke,sw)=>{
+    const k=.5523*r, p=(x,y)=>`${n(x)} ${n(PH-y)}`;
+    let o=`${rgb(fill)} rg ${rgb(stroke)} RG ${n(sw)} w `;
+    o+=`${p(cx+r,cy)} m ${p(cx+r,cy+k)} ${p(cx+k,cy+r)} ${p(cx,cy+r)} c ${p(cx-k,cy+r)} ${p(cx-r,cy+k)} ${p(cx-r,cy)} c ${p(cx-r,cy-k)} ${p(cx-k,cy-r)} ${p(cx,cy-r)} c ${p(cx+k,cy-r)} ${p(cx+r,cy-k)} ${p(cx+r,cy)} c h B`;
+    ops.push(o);
+  };
+
+  const dateStr = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  /* ---------- page 1: profile ---------- */
+  newPage();
+  text(M,54,'SUPPLY CHAIN DIGITAL MATURITY ASSESSMENT',8,true,GRAY);
+  text(M,90,'Your Maturity Profile',28,true,BLACK);
+  text(M,110,'Group 1  \u00B7  '+MEMBERS.map(m=>m.name).join(', ')+'  \u00B7  '+dateStr,9,false,GRAY);
+  line(M,124,PW-M,124,.8,LIGHT);
+
+  let y=150;
+  text(M,y,'PATTERN',8,true,GRAY); y+=22;
+  text(M,y,res.profile.name,17,true,BLACK); y+=22;
+  y=para(M,y,res.profile.desc,10.5,false,INK,CW,15)+10;
+
+  const aLines=wrap(res.profile.action,10.5,false,CW-32);
+  const boxH=37+aLines.length*15;
+  rect(M,y,CW,boxH,PALE); rect(M,y,3,boxH,BLACK);
+  text(M+16,y+20,'RECOMMENDED NEXT ACTION',8,true,GRAY);
+  aLines.forEach((l,i)=>text(M+16,y+38+i*15,l,10.5,false,BLACK));
+  y+=boxH+26;
+
+  text(M,y,'MATURITY RADAR',8,true,GRAY); y+=8;
+  const avail=740-y;
+  const R=Math.max(70,Math.min(112,(avail-80)/2));
+  const cx=PW/2, cy=y+40+R;
+  const labels=DIMENSIONS.map(d=>d.name), vals=DIMENSIONS.map(d=>res.scores[d.id]);
+  const ang=i=>-Math.PI/2+i*2*Math.PI/labels.length;
+  const P=(v,i)=>[cx+Math.cos(ang(i))*R*v/5, cy+Math.sin(ang(i))*R*v/5];
+  for(let r=1;r<=5;r++) poly(labels.map((_,i)=>P(r,i)),null,LIGHT,.7);
+  labels.forEach((_,i)=>{ const p=P(5,i); line(cx,cy,p[0],p[1],.5,LIGHT); });
+  for(let r=1;r<=5;r++) text(cx+3,cy-R*r/5-1.5,String(r),6.5,false,GRAY);
+  poly(vals.map((v,i)=>P(v,i)),[.5,.48,.45],BLACK,1.6,true);
+  vals.forEach((v,i)=>{ const p=P(v,i); circle(p[0],p[1],3.2,BLACK,[1,1,1],1); });
+  labels.forEach((lab,i)=>{
+    const a=ang(i), c=Math.cos(a), s=Math.sin(a);
+    const lx=cx+c*(R+12), ly=cy+s*(R+12);
+    const ls=wrap(lab,9,true,90);
+    const align = c>0.25 ? 'l' : (c<-0.25 ? 'r' : 'c');
+    const top = s<-0.5 ? ly-(ls.length-1)*11-3 : (s>0.5 ? ly+9 : ly+3-(ls.length-1)*5.5);
+    ls.forEach((l,k)=>text(lx,top+k*11,l,9,true,BLACK,align));
+  });
+
+  /* ---------- page 2: details ---------- */
+  newPage();
+  let y2=64;
+  text(M,y2,'DETAILS',8,true,GRAY);
+  text(M,y2+24,'Your two lowest dimensions',16,true,BLACK); y2+=46;
+  const bw=(CW-14)/2;
+  const boxes=res.lowestTwo.map(d=>({d, lines:wrap(stageActionFor(d,res.scores[d.id]),9.5,false,bw-28)}));
+  const bh=Math.max(...boxes.map(b=>70+13*b.lines.length));
+  boxes.forEach((b,i)=>{
+    const x=M+i*(bw+14);
+    rect(x,y2,bw,bh,PALE); rect(x,y2,bw,2,BLACK);
+    text(x+14,y2+20,'LOWEST DIMENSION',7.5,true,GRAY);
+    text(x+14,y2+36,b.d.name,11.5,true,BLACK);
+    text(x+14,y2+51,'Score '+res.scores[b.d.id].toFixed(2)+' of 5',9,true,BLACK);
+    b.lines.forEach((l,k)=>text(x+14,y2+69+k*13,l,9.5,false,INK));
+  });
+  y2+=bh+28;
+  text(M,y2,'Scores by dimension',16,true,BLACK); y2+=18;
+  DIMENSIONS.forEach(d=>{
+    const s=res.scores[d.id];
+    const stageIdx=Math.min(5,Math.max(1,Math.round(s)))-1;
+    const dl=wrap('Closest to Stage '+(stageIdx+1)+'. '+d.stages[stageIdx],9,false,CW);
+    const rh=44+dl.length*12+8;
+    if(y2+rh>742){ newPage(); y2=64; }
+    line(M,y2,PW-M,y2,.6,LIGHT);
+    text(M,y2+18,d.name,10.5,true,BLACK);
+    text(PW-M,y2+18,s.toFixed(2),10.5,true,BLACK,'r');
+    rect(M,y2+25,CW,4,LIGHT); rect(M,y2+25,CW*s/5,4,BLACK);
+    dl.forEach((l,k)=>text(M,y2+43+k*12,l,9,false,INK));
+    y2+=rh;
+  });
+  line(M,y2,PW-M,y2,.6,LIGHT);
+
+  /* footers */
+  pages.forEach((pg,i)=>{
+    ops=pg;
+    text(PW/2,PH-28,'Supply Chain Digital Maturity Assessment  \u00B7  Group 1  \u00B7  Page '+(i+1)+' of '+pages.length,7.5,false,GRAY,'c');
+  });
+
+  /* ---------- assemble the file ---------- */
+  let out='%PDF-1.4\n%\u00E2\u00E3\u00CF\u00D3\n';
+  const offs=[];
+  const add=(id,body)=>{ offs[id]=out.length; out+=id+' 0 obj\n'+body+'\nendobj\n'; };
+  add(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  const kids=pages.map((_,i)=>(6+i*2)+' 0 R').join(' ');
+  add(2,'<< /Type /Pages /Kids ['+kids+'] /Count '+pages.length+' >>');
+  add(3,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  add(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  add(5,'<< /Title (Your Maturity Profile - Group 1) /Subject (Supply Chain Digital Maturity Assessment) /Producer (Group 1 Maturity Assessment) >>');
+  pages.forEach((pg,i)=>{
+    const data=pg.join('\n');
+    add(6+i*2,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /ExtGState << /GS0 << /ca 1 /CA 1 >> /GS1 << /ca 0.28 /CA 1 >> >> >> /Contents '+(7+i*2)+' 0 R >>');
+    add(7+i*2,'<< /Length '+data.length+' >>\nstream\n'+data+'\nendstream');
+  });
+  const total=6+pages.length*2;
+  const xref=out.length;
+  out+='xref\n0 '+total+'\n0000000000 65535 f \n';
+  for(let i=1;i<total;i++) out+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  out+='trailer\n<< /Size '+total+' /Root 1 0 R /Info 5 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  const bytes=new Uint8Array(out.length);
+  for(let i=0;i<out.length;i++) bytes[i]=out.charCodeAt(i)&255;
+  return bytes;
+}
+
+function downloadResultPdf(){
+  const res=window.__lastResult;
+  if(!res) return;
+  const btn=document.getElementById('downloadPdfBtn');
+  const label=btn.innerHTML;
+  try{
+    const bytes=buildResultPdf(res);
+    const blob=new Blob([bytes],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='Maturity-Profile-Group-1.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    btn.textContent='Downloaded \u2713';
+    setTimeout(()=>{ btn.innerHTML=label; },1800);
+  }catch(err){
+    console.error('PDF export failed:',err);
+    alert('Sorry, the PDF could not be created. You can also use your browser\'s Print option (Ctrl/Cmd + P) and choose Save as PDF.');
+  }
+}
+document.getElementById('downloadPdfBtn').addEventListener('click', downloadResultPdf);
+
+
+const FRAMEWORK = {
+ "presenter": {
+  "name": "Ai Ky Chung",
+  "role": "Framework Designer",
+  "owns": "Framework, Interpretation Guide"
+ },
+ "course": "ISM 6930 · Introduction to Digital Business Transformation · Group 1",
+ "deckTitle": "Supply Chain Digital Maturity Assessment",
+ "industry": "Supply chain management - mainly focused on the upstream supply chain. Covering supplier sourcing, bill of materials validation, lead time management, supplier data collaboration, and demand forecasting planning between the company and its suppliers.",
+ "dimsIntro": "The five dimensions follow the digital maturity models in the supply chain industry, especially in the procurement sector.",
+ "dims": [
+ [
+  "Sourcing Intelligence",
+  "How suppliers are selected, evaluated, and managed using structured data."
+ ],
+ [
+  "BOMs Validation",
+  "How BOM changes move accurately from design to suppliers and production."
+ ],
+ [
+  "Lead Time Visibility",
+  "How lead times are tracked, updated, and predicted."
+ ],
+ [
+  "Supplier Digital Collaboration",
+  "How companies and suppliers share POs, forecasts, production updates, and logistics data."
+ ],
+ [
+  "Demand Forecast and Planning",
+  "How forecasting moves from manual Excel planning to AI-supported ERP forecasting."
+ ]
+],
+ "indepLead": "Each dimension has both advantages and disadvantages, which makes the radar chart useful. For instances:",
+ "indepItems": [
+  "A company has validated BOMs, while the lead time visibility in the ERP system is out of date.",
+  "A company has all the POs electronically but the sourcing strategy is not strong enough.",
+  "A company can track suppliers’ production, shipping timeline, but has a weak demand forecast."
+ ],
+ "stages": [
+ {
+  "name": "Sourcing Intelligence",
+  "steps": [
+   [
+    "Manual",
+    "Supplier selection relies on relationships or availability, with little formal evaluation or savings tracking."
+   ],
+   [
+    "Reactive",
+    "Buyers use recent RFQs and past supplier issues to negotiate, while savings are estimated after projects."
+   ],
+   [
+    "Structured",
+    "Suppliers are evaluated using total cost of ownership, quarterly performance reviews, and active savings tracking."
+   ],
+   [
+    "Integrated",
+    "A formal scorecard ranks suppliers on cost, delivery, and quality, with cross-functional approval for exceptions."
+   ],
+   [
+    "Intelligent",
+    "AI supports supplier selection, volume shifting, backup sourcing, and automatic savings calculation."
+   ]
+  ]
+ },
+ {
+  "name": "BOMs Validation",
+  "steps": [
+   [
+    "Manual",
+    "BOMs are shared through drawings or spreadsheets, and errors are usually found only when suppliers ask questions."
+   ],
+   [
+    "ERP-Based",
+    "BOMs are stored in ERP, but both the company and suppliers still verify them manually before production."
+   ],
+   [
+    "Partially Automated",
+    "ERP automatically sends BOM updates, but buyers still perform manual checks and corrections."
+   ],
+   [
+    "Integrated",
+    "PLM and ERP are connected, approved parts update automatically, and duplicate items are blocked."
+   ],
+   [
+    "Intelligent",
+    "AI validates BOM changes, checks supplier compliance, blocks obsolete parts, and updates related POs and forecasts."
+   ]
+  ]
+ },
+ {
+  "name": "Lead Time Visibility",
+  "steps": [
+   [
+    "Manual",
+    "Lead times come from informal supplier quotes and are not compared with actual delivery performance."
+   ],
+   [
+    "Static ERP",
+    "Lead times are entered into ERP when POs are created but are rarely updated afterward."
+   ],
+   [
+    "Monitored",
+    "Buyers review actual deliveries, update critical lead times, and track on-time delivery manually."
+   ],
+   [
+    "Integrated",
+    "ERP automatically tracks delivery performance, while supplier confirmations and ASNs help identify delays early."
+   ],
+   [
+    "Predictive",
+    "AI/ML predicts lead times using supplier capacity, cycle time, seasonality, and freight conditions."
+   ]
+  ]
+ },
+ {
+  "name": "Supplier Digital Collaboration",
+  "steps": [
+   [
+    "Manual Communication",
+    "Supplier information and order updates are exchanged through paper, email, text, and phone calls."
+   ],
+   [
+    "Shared Files",
+    "The company and suppliers use shared Excel files, but manual updates can create version conflicts."
+   ],
+   [
+    "Partial Digitalization",
+    "Portals or EDI support some POs and invoices, while production and shipping updates remain manual."
+   ],
+   [
+    "Integrated Collaboration",
+    "Most supplier activities flow through EDI, although forecasts and some production timelines still use Excel."
+   ],
+   [
+    "Connected Network",
+    "Orders, supplier profiles, forecasts, production capacity, and shipping data update automatically between systems."
+   ]
+  ]
+ },
+ {
+  "name": "Demand Forecast and Planning",
+  "steps": [
+   [
+    "Experience-Based",
+    "There is no formal forecast; buyers reorder based on experience or low inventory."
+   ],
+   [
+    "Spreadsheet Forecasting",
+    "Forecasts are created in Excel using recent sales but are shared irregularly and accuracy is not measured."
+   ],
+   [
+    "ERP Baseline",
+    "ERP generates a baseline forecast, but different teams still maintain separate versions."
+   ],
+   [
+    "Integrated Planning",
+    "A shared ERP forecast is used across departments, accuracy is tracked, and teams align regularly."
+   ],
+   [
+    "AI-Driven Planning",
+    "Machine learning generates forecasts from real-time data and automatically feeds purchasing plans into ERP."
+   ]
+  ]
+ }
+],
+ "calibIntro": "Revlon anchors the low end and L'Oréal the high end. Revlon did run SAP, so it is not a pure Stage 1 company; it shows the mistakes that follow when a company jumps from Stage 1–2 practices to a large ERP without clean data or processes.",
+ "calib": [
+  [
+   "Sourcing Intelligence",
+   "In 2022, the company relied on limited suppliers, with slow and costly qualification of new ones.",
+   "Uses a custom IBM generative AI model to discover and source sustainable materials."
+  ],
+  [
+   "BOMs (Bill of Materials) Validation",
+   "In 2018, unable to migrate historical data into the new system, the company struggled with inventory accuracy.",
+   "Implemented Elixpedia and Cosmo worldwide as enterprise systems of record for master data."
+  ],
+  [
+   "Lead Time Visibility",
+   "Its SAP launch disrupted its North Carolina plant in 2018, so it could not produce enough finished goods or ship to large US retailers. It paid expedited shipping fees, and about $64M of shipments went unfulfilled.",
+   "Operates the Global Freight Cockpit, a control tower powered by supplier transportation data."
+  ],
+  [
+   "Supplier Digital Collaboration",
+   "Had difficulty processing payments to vendors after the SAP launch.",
+   "Digitizes vendor packaging and material specifications through a cloud portal."
+  ],
+  [
+   "Demand Forecast and Planning",
+   "Lack of inventory visibility caused severe misalignments between MRP and production schedules.",
+   "Aligns AI-generated forecasts across marketing, sales, finance, and supply chain to eliminate functional barriers."
+  ]
+ ]
+};
+
+/* =====================================================================
+   STAGE 5 — FRAMEWORK PRESENTATION (Ai Ky Chung, Framework Designer)
+   Content: sections 1.1 – 1.3 of the Group 1 write-up (ISM 6930 W5).
+===================================================================== */
+const FW_SLIDES = (()=>{
+  const s = [
+    {kind:'cover', label:'Overview'},
+    {kind:'dims',  label:'1.1 Five dimensions'},
+  ];
+  FRAMEWORK.stages.forEach((st,i)=>s.push({kind:'stages', idx:i, label:'1.2 '+st.name}));
+
+  return s;
+})();
+let fwIndex = 0;
+const fwText = t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function fwSlideHtml(sl){
+  const F = FRAMEWORK;
+  if(sl.kind==='cover'){
+    return `<div class="fw-left">
+        <div class="fw-kicker">${fwText(F.course)}</div>
+        <h2 class="fw-title xl">Maturity Framework</h2>
+        <p class="fw-blurb">${fwText(F.deckTitle)}</p>
+        <div class="fw-presenter"><span>Presented by</span><strong>${fwText(F.presenter.name)}</strong><em>${fwText(F.presenter.role)} &#183; ${fwText(F.presenter.owns)}</em></div>
+      </div>
+      <div class="fw-right">
+        <div class="fw-box"><div class="fw-label">Industry</div><p>${fwText(F.industry)}</p></div>
+        <div class="fw-agenda">
+          <div class="fw-agenda-row" data-fw="1"><b>1.1</b><span>Five dimensions</span><i>Independence check</i></div>
+          <div class="fw-agenda-row" data-fw="3"><b>1.2</b><span>Stage descriptions</span><i>Stages 1 &ndash; 5 &middot; 5 dimensions</i></div>
+        </div>
+      </div>`;
+  }
+  if(sl.kind==='dims'){
+    return `<div class="fw-left">
+        <div class="fw-kicker">1.1 &middot; Maturity Framework</div>
+        <h2 class="fw-title">Five dimensions</h2>
+        <p class="fw-blurb">${fwText(F.dimsIntro)}</p>
+      </div>
+      <div class="fw-right">
+        <div class="fw-head-row" style="grid-template-columns:40px minmax(150px,220px) 1fr;gap:20px"><span></span><span>Dimension</span><span>What it measures</span></div>
+        ${F.dims.map((d,i)=>`<div class="fw-row"><span class="fw-num">0${i+1}</span><h4>${fwText(d[0])}</h4><p>${fwText(d[1])}</p></div>`).join('')}
+      </div>`;
+  }
+
+  if(sl.kind==='stages'){
+    const st = F.stages[sl.idx];
+    return `<div class="fw-left">
+        <div class="fw-kicker">1.2 &middot; Stage descriptions<br>Dimension ${sl.idx+1} of ${F.stages.length}</div>
+        <h2 class="fw-title">${fwText(st.name)}</h2>
+        <p class="fw-blurb">Five observable organizational states, from Stage 1 (least mature) to Stage 5 (most mature).</p>
+      </div>
+      <div class="fw-right">
+        <div class="fw-steps">
+          ${st.steps.map((t,i)=>`<div class="fw-step" style="--n:${i+1}"><div class="fw-step-track"><i class="fw-step-bar"></i></div><b>${i+1}</b><h4>${fwText(t[0])}</h4><p>${fwText(t[1])}</p></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+}
+
+function renderFramework(i){
+  fwIndex = Math.max(0, Math.min(FW_SLIDES.length-1, i));
+  const el = document.getElementById('fwSlide');
+  el.innerHTML = fwSlideHtml(FW_SLIDES[fwIndex]);
+  el.classList.toggle('is-cover', FW_SLIDES[fwIndex].kind==='cover');
+  el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim');
+  el.querySelectorAll('[data-fw]').forEach(r=>r.addEventListener('click', ()=>renderFramework(+r.dataset.fw)));
+  document.getElementById('fwCount').textContent = String(fwIndex+1).padStart(2,'0')+' / '+String(FW_SLIDES.length).padStart(2,'0');
+  const ticks = document.getElementById('fwTicks');
+  ticks.innerHTML = FW_SLIDES.map((s,k)=>`<div class="fw-tick${k===fwIndex?' on':''}" data-k="${k}" title="${fwText(s.label)}"></div>`).join('');
+  ticks.querySelectorAll('.fw-tick').forEach(t=>t.addEventListener('click', ()=>renderFramework(+t.dataset.k)));
+  const last = fwIndex===FW_SLIDES.length-1;
+  document.getElementById('fwPrev').disabled = fwIndex===0;
+  document.getElementById('fwNext').innerHTML = last ? 'Back to team &#8594;' : 'Next &#8250;';
+}
+function openFramework(){ goTo('framework'); renderFramework(0); }
+document.getElementById('fwBack').addEventListener('click', ()=>goTo('members'));
+document.getElementById('fwPrev').addEventListener('click', ()=>renderFramework(fwIndex-1));
+document.getElementById('fwNext').addEventListener('click', ()=>{
+  if(fwIndex===FW_SLIDES.length-1) goTo('members'); else renderFramework(fwIndex+1);
+});
+document.addEventListener('keydown', e=>{
+  if(!stages.framework.classList.contains('active')) return;
+  if(e.key==='ArrowRight'){ if(fwIndex<FW_SLIDES.length-1) renderFramework(fwIndex+1); }
+  else if(e.key==='ArrowLeft'){ renderFramework(fwIndex-1); }
+  else if(e.key==='Escape'){ goTo('members'); }
+});
+
+/* init */
+goTo('members');
+</script>
+</body>
+</html>
